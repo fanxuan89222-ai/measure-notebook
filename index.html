@@ -275,6 +275,13 @@
   @keyframes popIn { from { opacity: 0; transform: translateY(10px) scale(0.98); } }
   .dialog { background: #fff; border-radius: 22px; padding: 22px; width: min(420px, 100%); box-shadow: var(--floatHi); max-height: 90vh; overflow-y: auto; }
   .dialog h3 { margin: 0 0 14px; font-size: 19px; font-weight: 700; }
+  /* 標題列：右邊有 ×，捲動長的對話框時黏在最上面 */
+  .dlgHead { display: flex; align-items: center; justify-content: space-between; gap: 10px; position: sticky; top: -22px; z-index: 2;
+    background: #fff; margin: -22px -22px 6px; padding: 18px 16px 8px 22px; }
+  .dlgHead h3 { margin: 0; }
+  .dlgX { width: 36px; height: 36px; border: none; border-radius: 50%; background: var(--ground); color: var(--ink2); padding: 0; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+  .dlgX:hover { background: var(--ground2); color: var(--ink); }
+  .dlgX svg { width: 18px; height: 18px; }
   .dialog p { margin: 0 0 14px; color: var(--ink2); font-size: 15px; line-height: 1.55; }
   .dialog textarea {
     width: 100%; font: inherit; font-size: 17px; padding: 12px; border: 1px solid transparent; border-radius: 12px; background: var(--ground);
@@ -460,6 +467,11 @@
     border-radius: 10px; color: var(--ink); background: #fff; -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; }
   #lenIn:focus { outline: none; box-shadow: 0 0 0 3px var(--selSoft); }
   #lenUnit { font-size: 14px; color: var(--ink2); }
+  #lenIn2 { width: 78px; height: 38px; font: inherit; font-size: 20px; font-weight: 600; text-align: right; padding: 0 8px; border: 1.5px solid var(--sel);
+    border-radius: 10px; color: var(--ink); background: #fff; -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; }
+  #lenIn2:focus { outline: none; box-shadow: 0 0 0 3px var(--selSoft); }
+  #lenPop .lenTag { font-size: 14px; color: var(--ink2); white-space: nowrap; }
+  #lenPop:not(.rect) #lenIn2, #lenPop:not(.rect) .lenTag { display: none; }
   #lenPop .lenLab { display: flex; align-items: center; gap: 4px; font-size: 13px; color: var(--ink2); margin-left: 2px; white-space: nowrap; }
   #lenPop .lenLab input { width: 18px; height: 18px; accent-color: var(--sel); margin: 0; }
   #lenPop .btn { height: 38px; padding: 0 12px; }
@@ -691,7 +703,10 @@
     </div>
     <!-- 照比例模式：畫完直線跳出的長度輸入框 -->
     <form id="lenPop" autocomplete="off">
-      <input id="lenIn" type="text" inputmode="decimal" enterkeyhint="done" aria-label="線的長度">
+      <span class="lenTag" id="lenTag1">寬</span>
+      <input id="lenIn" type="text" inputmode="decimal" enterkeyhint="next" aria-label="線的長度">
+      <span class="lenTag" id="lenTag2">×　深</span>
+      <input id="lenIn2" type="text" inputmode="decimal" enterkeyhint="done" aria-label="矩形的深">
       <span id="lenUnit">cm</span>
       <label class="lenLab"><input type="checkbox" id="lenLabel">標尺寸</label>
       <button type="submit" class="btn primary" id="lenOk">確定</button>
@@ -730,7 +745,7 @@
 <!-- 顏色盤 -->
 <div class="modal" id="paletteModal">
   <div class="dialog">
-    <h3>換這一格的顏色</h3>
+    <div class="dlgHead"><h3>換這一格的顏色</h3><button class="dlgX" data-for="paletteClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="palette" id="palette"></div>
     <label class="customColor">調色 <input type="color" id="customColor" value="#1a1a1a"><span style="color:var(--ink2);font-size:13px">調好後按下面的「＋」存進我的色盤</span></label>
     <div class="myHead">我的色盤 <button id="myEdit">編輯</button></div>
@@ -742,7 +757,7 @@
 <!-- 圖層面板 -->
 <div class="modal" id="layersModal">
   <div class="dialog" style="width:min(480px,100%)">
-    <h3>圖層</h3>
+    <div class="dlgHead"><h3>圖層</h3><button class="dlgX" data-for="layersClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <p style="margin-bottom:12px">點名稱＝在這個圖層畫圖。眼睛＝顯示／隱藏，鎖頭＝鎖定後不能選取、擦除或清除。按住左邊的把手上下拖曳換順序，上面的圖層會蓋在下面。</p>
     <div id="layerList"></div>
     <div class="row" style="justify-content:space-between">
@@ -755,7 +770,7 @@
 <!-- 版面設定 -->
 <div class="modal" id="settingsModal">
   <div class="dialog settings">
-    <h3>設定</h3>
+    <div class="dlgHead"><h3>設定</h3><button class="dlgX" data-for="settingsClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
 
     <!-- 每個區塊＝一類設定。以後新增設定，找對應的區塊放進去；沒有適合的再開新區塊 -->
     <section>
@@ -775,7 +790,7 @@
       <div id="scaleOpts">
         <div class="setRow" style="margin-top:10px"><span>長度間距<small>畫線時長度每次跳多少</small></span></div>
         <div class="seg" id="stepSeg"><button data-v="1">1 cm</button><button data-v="5">5 cm</button><button data-v="10">10 cm</button></div>
-        <label class="setRow toggle"><span>畫完直線就打長度<small>線旁邊跳出數字框，打 245 就變成剛好 245 公分；不理它就維持手畫的長度</small></span><input type="checkbox" id="quickLenOn"></label>
+        <label class="setRow toggle"><span>畫完直接打尺寸<small>畫完直線或矩形，旁邊跳出數字框：直線打長度，矩形打寬和深；不理它就維持手畫的大小</small></span><input type="checkbox" id="quickLenOn"></label>
       </div>
     </section>
 
@@ -2445,7 +2460,7 @@ function endPointer(e) {
     doc.items.push(newIt);
     afterChange();
     // 照比例模式：畫完一條直線，旁邊跳出長度輸入框
-    if (straight && newIt.pts.length === 2 && scaleOn() && ui.quickLen !== false) openLenPop(newIt);
+    if (straight && (newIt.pts.length === 2 || isRect(newIt)) && scaleOn() && ui.quickLen !== false) openLenPop(newIt);
     // 畫完就出現「?」：只標記剛畫好的這條，上一條的「?」收起來
     if (ui.dimMode === "each" && doc.mode !== "sketch") { ui.lastDimId = straight ? newIt.id : null; render(); }
   } else if (a.type === "fdimDraw") {
@@ -3596,37 +3611,65 @@ $("dimSizeSlider").addEventListener("change", () => { dimSizeUndo = false; after
 /* ---------- 畫完直線就打長度（照比例模式） ----------
    線的起點固定，終點沿著原本的方向移到輸入的長度；相連的牆會跟著推（setSegLength 處理）
    「標尺寸」打勾＝同時在線上標這個數字（會記住上次的選擇） */
-let lenPopId = null;
+let lenPopId = null, lenSegs = [0];   // 要改的是第幾段（矩形：[橫的那段, 直的那段]）
 function openLenPop(it) {
   lenPopId = it.id;
-  const [a, b] = it.pts;
-  $("lenIn").value = lenText(Math.hypot(b[0] - a[0], b[1] - a[1]));
+  const pop = $("lenPop");
+  const segLen = (i) => { const a = it.pts[i], b = it.pts[i + 1]; return Math.hypot(b[0] - a[0], b[1] - a[1]); };
+  const rect = isRect(it);
+  pop.classList.toggle("rect", rect);
+  if (rect) {
+    // 矩形：第 0 段是橫的還是直的？橫的＝寬、直的＝深
+    const h0 = Math.abs(it.pts[1][1] - it.pts[0][1]) < 0.5;
+    lenSegs = h0 ? [0, 1] : [1, 0];
+    $("lenIn").value = lenText(segLen(lenSegs[0]));
+    $("lenIn2").value = lenText(segLen(lenSegs[1]));
+  } else {
+    lenSegs = [0];
+    $("lenIn").value = lenText(segLen(0));
+  }
   $("lenUnit").textContent = doc.meta.unit || "cm";
   $("lenLabel").checked = ui.quickLenLabel !== false;
-  // 放在線的中點旁邊（螢幕座標）；水平線放下面，其他放右邊
-  const v = ui.view, mx = ((a[0] + b[0]) / 2) * v.z + v.x, my = ((a[1] + b[1]) / 2) * v.z + v.y;
-  const pop = $("lenPop");
+  // 位置：直線放在中點旁邊；矩形放在下面那條邊的下方（螢幕座標）
+  const v = ui.view, xs = it.pts.map((p) => p[0]), ys = it.pts.map((p) => p[1]);
   pop.classList.add("show");
   const W = $("stageWrap").clientWidth, H = $("stageWrap").clientHeight, pw = pop.offsetWidth, ph = pop.offsetHeight;
-  const horiz = Math.abs(b[1] - a[1]) < Math.abs(b[0] - a[0]);
-  let x = horiz ? mx - pw / 2 : mx + 24, y = horiz ? my + 22 : my - ph / 2;
+  let x, y;
+  if (rect) {
+    x = ((Math.min(...xs) + Math.max(...xs)) / 2) * v.z + v.x - pw / 2;
+    y = Math.max(...ys) * v.z + v.y + 18;
+  } else {
+    const [a, b] = it.pts, mx = ((a[0] + b[0]) / 2) * v.z + v.x, my = ((a[1] + b[1]) / 2) * v.z + v.y;
+    const horiz = Math.abs(b[1] - a[1]) < Math.abs(b[0] - a[0]);
+    x = horiz ? mx - pw / 2 : mx + 24; y = horiz ? my + 22 : my - ph / 2;
+  }
   pop.style.left = Math.max(8, Math.min(W - pw - 8, x)) + "px";
   pop.style.top = Math.max(70, Math.min(H - ph - 8, y)) + "px";
   $("lenIn").focus(); $("lenIn").select();
 }
-function closeLenPop() { $("lenPop").classList.remove("show"); lenPopId = null; $("lenIn").blur(); }
+function closeLenPop() { $("lenPop").classList.remove("show"); lenPopId = null; $("lenIn").blur(); $("lenIn2").blur(); }
 $("lenPop").addEventListener("submit", (e) => {
   e.preventDefault();
   const it = doc.items.find((x) => x.id === lenPopId);
-  const cm = toCm($("lenIn").value);
+  const rect = $("lenPop").classList.contains("rect");
+  const vals = rect ? [toCm($("lenIn").value), toCm($("lenIn2").value)] : [toCm($("lenIn").value)];
   ui.quickLenLabel = $("lenLabel").checked; savePrefs();
+  const segs = lenSegs.slice();
   closeLenPop();
-  if (!it || !cm) return;
-  pushUndo();   // 復原一次＝回到手畫的長度
-  setSegLength(it, 0, cm);
-  if (ui.quickLenLabel) { it.dims = it.dims || {}; it.dims[0] = { ...(it.dims[0] || {}), v: fromCm(cm), side: (it.dims[0] && it.dims[0].side) || 1 }; }
+  if (!it || !vals.some(Boolean)) return;
+  pushUndo();   // 復原一次＝回到手畫的大小
+  vals.forEach((cm, k) => {
+    if (!cm) return;
+    setSegLength(it, segs[k], cm);
+    if (ui.quickLenLabel) { it.dims = it.dims || {}; it.dims[segs[k]] = { ...(it.dims[segs[k]] || {}), v: fromCm(cm), side: (it.dims[segs[k]] && it.dims[segs[k]].side) || 1 }; }
+  });
   afterChange();
 });
+// 矩形：第一格按 Enter 跳到第二格
+$("lenIn").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && $("lenPop").classList.contains("rect")) { e.preventDefault(); $("lenIn2").focus(); $("lenIn2").select(); }
+});
+$("lenIn2").addEventListener("keydown", (e) => { if (e.key === "Escape") closeLenPop(); });
 $("lenX").addEventListener("click", closeLenPop);
 $("lenIn").addEventListener("keydown", (e) => { if (e.key === "Escape") closeLenPop(); });
 // 開始畫下一筆、或點畫布別的地方＝不用改
@@ -3947,6 +3990,8 @@ function refreshSettings() {
   document.querySelectorAll("#unitSeg button").forEach((b) => b.classList.toggle("on", b.dataset.v === (doc.meta.unit || "cm")));
   $("dimCheck").checked = ui.dimCheck;
 }
+// 對話框右上角的 ×：等於按那個對話框的「完成」
+document.querySelectorAll(".dlgX").forEach((b) => b.addEventListener("click", () => $(b.dataset.for).click()));
 document.querySelectorAll("#dimModeSeg button").forEach((b) => b.addEventListener("click", () => { ui.dimMode = b.dataset.v; refreshSettings(); save(); }));
 document.querySelectorAll("#unitSeg button").forEach((b) => b.addEventListener("click", () => {
   doc.meta.unit = b.dataset.v; ui.dimUnit = b.dataset.v; refreshSettings(); save();
@@ -4742,8 +4787,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.4";
+const APP_VERSION = "2026.11.07.5";
 const CHANGELOG = [
+  ["2026.11.07.5", [
+    "照比例模式：畫完矩形，可以直接輸入寬和深（像 CAD 一樣）",
+    "設定、圖層、顏色視窗右上角多了 ×，不用滑到最下面按完成",
+  ]],
   ["2026.11.07.4", [
     "變順了：平移、縮放畫面，和拖曳符號、文字時比較不會卡",
   ]],
