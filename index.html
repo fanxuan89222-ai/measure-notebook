@@ -71,7 +71,7 @@
   body.inLibrary #tabbar button.on { background: var(--ground); }
   #tabbar .tab { max-width: 260px; }
   #tabbar .tab span { overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
-  #tabbar .tab i { font-style: normal; opacity: 0.55; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
+  #tabbar .tab i { font-style: normal; opacity: 0.55; width: 30px; height: 30px; margin-right: -8px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 13px; }
   #tabbar .tab.on i:hover { background: var(--ground); }
   #tabbar .tabNew { padding: 0 10px; }
   #tabbar svg.i { width: 18px; height: 18px; }
@@ -664,11 +664,11 @@
       <span>cm</span>
     </div>
     <div id="dimBar">
-      <span>字</span>
+      <span>字級</span>
       <input type="range" class="sizeSlider" id="dimSizeSlider" min="10" max="50" step="1" style="width:110px">
       <input type="number" class="sizeNum" id="dimSizeVal" min="10" max="50" step="1" inputmode="numeric">
       <span class="barSep"></span>
-      <span>線</span>
+      <span>線粗</span>
       <input type="range" class="sizeSlider" id="dimLineSlider" min="0.6" max="10" step="0.1" style="width:90px">
       <input type="number" class="sizeNum" id="dimLineVal" min="0.6" max="10" step="0.1" inputmode="decimal">
       <span class="barSep"></span>
@@ -800,6 +800,7 @@
 
     <section>
       <h4>版面（所有圖共用）</h4>
+      <label class="setRow toggle" style="margin:0 0 14px"><span>自動分圖層<small>牆壁→「牆壁」、符號→「設備」、尺寸和文字→「標註」；選了自己建的圖層時，就全部畫在那一層</small></span><input type="checkbox" id="autoLayerOn"></label>
       <div class="setRow"><span>主題顏色<small>分頁列、選中的工具、選取框的顏色</small></span></div>
       <div class="themeSw" id="themeSw"></div>
       <div style="height:14px"></div>
@@ -1407,7 +1408,7 @@ function prefsObj() {
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
     quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill,
     trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
-    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel,
+    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
 }
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefsObj())); } catch (e) { /* 存不了就算了 */ } }
@@ -1444,6 +1445,7 @@ function applyPrefs(p) {
   ui.exportTitle = !!p.exportTitle;
   if (p.theme) ui.theme = p.theme;
   if (p.quickLen === false) ui.quickLen = false;
+  if (p.autoLayer === false) ui.autoLayer = false;
   if (p.quickLenLabel === false) ui.quickLenLabel = false;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
@@ -1959,6 +1961,21 @@ function unmeasuredCount() {
   return n;
 }
 const hasAnyDim = () => doc.items.some((it) => (it.type === "dim" && it.v) || (it.dims && Object.values(it.dims).some((d) => d && d.v)));
+
+/* ---------- 自動分圖層 ----------
+   新圖預設有「牆壁、設備、標註」三個圖層，但以前全部都畫在目前選的那一層，圖層等於沒用。
+   現在：牆壁筆畫的 → 牆壁；符號、圖片 → 設備；尺寸、文字、箭頭和框 → 標註；一般畫筆 → 目前的圖層。
+   不自動分的情況：草圖模式、設定裡關掉、或目前選的是自己建的圖層（那就全部畫在那一層，照使用者的意思）；
+   目標圖層被刪掉、鎖住或隱藏時，也改畫在目前的圖層。 */
+const AUTO_LAYER = { wall: "牆壁", sym: "設備", note: "標註" };
+function layerFor(kind) {
+  if (doc.mode === "sketch" || ui.autoLayer === false || !AUTO_LAYER[kind]) return doc.activeLayer;
+  const act = doc.layers.find((l) => l.id === doc.activeLayer);
+  if (!act || !Object.values(AUTO_LAYER).includes(act.name)) return doc.activeLayer;
+  const t = doc.layers.find((l) => l.name === AUTO_LAYER[kind] && !l.sketch);
+  if (!t || t.locked || !t.visible) return doc.activeLayer;
+  return t.id;
+}
 
 /* ---------- 拖曳時的快速重畫 ----------
    拖曳、縮放、旋轉時每動一下都整張重畫會卡（東西多的時候特別明顯）。
@@ -2558,7 +2575,7 @@ function endPointer(e) {
       if (a.shape.kind === "line" || a.shape.kind === "poly") pts = snapToVertices(pts, a.wall ? a.width * 0.8 : 0);
     }
     pushUndo();
-    const newIt = { id: nextId++, type: "stroke", layer: doc.activeLayer, pts: pts.map(([x, y]) => [round1(x), round1(y)]), color: ui.color, width: a.width, wall: a.wall, straight };
+    const newIt = { id: nextId++, type: "stroke", layer: layerFor(a.wall ? "wall" : "pen"), pts: pts.map(([x, y]) => [round1(x), round1(y)]), color: ui.color, width: a.width, wall: a.wall, straight };
     doc.items.push(newIt);
     afterChange();
     // 照比例模式：畫完一條直線，旁邊跳出長度輸入框
@@ -2576,7 +2593,7 @@ function endPointer(e) {
       return;
     }
     pushUndo();
-    const it = { id: nextId++, type: "dim", layer: doc.activeLayer, x1: a.p1[0], y1: a.p1[1], x2: a.p2[0], y2: a.p2[1], side: 1, off: 30, v: "" };
+    const it = { id: nextId++, type: "dim", layer: layerFor("note"), x1: a.p1[0], y1: a.p1[1], x2: a.p2[0], y2: a.p2[1], side: 1, off: 30, v: "" };
     doc.items.push(it);
     afterChange();
     openFreeDim(it, true);
@@ -2605,7 +2622,7 @@ function endPointer(e) {
       if (!txt) return;
       pushUndo();
       const size = 22;
-      doc.items.push({ id: nextId++, type: "text", layer: doc.activeLayer, x: a.wx, y: a.wy - size / 2, text: txt, size, color: ui.color });
+      doc.items.push({ id: nextId++, type: "text", layer: layerFor("note"), x: a.wx, y: a.wy - size / 2, text: txt, size, color: ui.color });
       afterChange();
     });
   } else if (a.type === "move") {
@@ -2801,7 +2818,7 @@ function showEraserCursor(wx, wy) {
 
 // 用拖曳的起點、終點做出一個圖形
 function makeShape(a) {
-  const base = { type: "shape", kind: ui.shapeKind, layer: doc.activeLayer, color: ui.color, width: ui.shapeWidth };
+  const base = { type: "shape", kind: ui.shapeKind, layer: layerFor("note"), color: ui.color, width: ui.shapeWidth };
   if (ui.shapeKind === "arrow" || ui.shapeKind === "elbow") return { ...base, x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 };
   return { ...base, x: Math.min(a.x1, a.x2), y: Math.min(a.y1, a.y2), w: Math.max(4, Math.abs(a.x2 - a.x1)), h: Math.max(4, Math.abs(a.y2 - a.y1)), fill: ui.shapeFill, text: "" };
 }
@@ -3148,7 +3165,7 @@ function addSymbol(key) {
   const s = SYMBOLS[key];
   if (!canDrawOnActive()) return;
   pushUndo();
-  const it = { id: nextId++, type: "sym", layer: doc.activeLayer, key, x: cx - (s.w * PX_PER_CM) / 2, y: cy - (s.h * PX_PER_CM) / 2, sx: 1, sy: 1, rot: 0, flip: false };
+  const it = { id: nextId++, type: "sym", layer: layerFor("sym"), key, x: cx - (s.w * PX_PER_CM) / 2, y: cy - (s.h * PX_PER_CM) / 2, sx: 1, sy: 1, rot: 0, flip: false };
   doc.items.push(it);
   ui.selectedId = it.id;
   setTool("select");
@@ -3378,7 +3395,7 @@ function insertImage(src, w, h, assetId) {
   const k = target / Math.max(w, h);
   const bw = w * k, bh = h * k;
   pushUndo();
-  const it = { id: nextId++, type: "img", layer: doc.activeLayer, asset: id, bw, bh, x: cx - bw / 2, y: cy - bh / 2, sx: 1, sy: 1, rot: 0, flip: false, opacity: 1 };
+  const it = { id: nextId++, type: "img", layer: layerFor("sym"), asset: id, bw, bh, x: cx - bw / 2, y: cy - bh / 2, sx: 1, sy: 1, rot: 0, flip: false, opacity: 1 };
   doc.items.push(it);
   ui.selectedId = it.id;
   setTool("select");
@@ -3414,6 +3431,7 @@ function setTool(tool) {
   $("shapeBar").classList.toggle("show", tool === "shape");
   $("dimBar").classList.toggle("show", tool === "dim");
   if (tool === "dim") refreshDimBar();
+  $("toast").classList.remove("show");   // 上一個工具的提示收掉
   render();
   if (tool === "dim") {
     const n = unmeasuredCount();
@@ -4074,6 +4092,7 @@ function warnOutsidePage() {
 document.querySelectorAll("#sizeSeg button").forEach((b) => b.addEventListener("click", () => setPageSize(b.dataset.v)));
 document.querySelectorAll("#orientSeg button").forEach((b) => b.addEventListener("click", () => setPageSize((doc.paper && doc.paper.size) || "A4", b.dataset.v)));
 $("exportTitle").addEventListener("change", (e) => { ui.exportTitle = e.target.checked; savePrefs(); });
+$("autoLayerOn").addEventListener("change", (e) => { ui.autoLayer = e.target.checked; savePrefs(); });
 function setPaper(patch) {
   doc.paper = { ...(doc.paper || {}), ...patch };
   ui.paper = { ...doc.paper };
@@ -4107,9 +4126,14 @@ function refreshSettings() {
   document.querySelectorAll("#orientSeg button").forEach((b) => b.classList.toggle("on", b.dataset.v === ((doc.paper && doc.paper.orient) || "portrait")));
   $("orientSeg").style.display = size === "infinite" ? "none" : "";
   $("exportTitle").checked = !!ui.exportTitle;
+  $("autoLayerOn").checked = ui.autoLayer !== false;
   document.querySelectorAll("#dimModeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.v === ui.dimMode));
   document.querySelectorAll("#unitSeg button").forEach((b) => b.classList.toggle("on", b.dataset.v === (doc.meta.unit || "cm")));
   $("dimCheck").checked = ui.dimCheck;
+}
+// 點對話框外面的暗處＝關閉（設定、圖層、顏色、資料夾顏色、更新說明）
+for (const [modal, btn] of [["settingsModal", "settingsClose"], ["layersModal", "layersClose"], ["paletteModal", "paletteClose"], ["folderColorModal", "folderColorClose"], ["newsModal", "newsOk"]]) {
+  $(modal).addEventListener("click", (e) => { if (e.target === $(modal)) $(btn).click(); });
 }
 // 對話框右上角的 ×：等於按那個對話框的「完成」
 document.querySelectorAll(".dlgX").forEach((b) => b.addEventListener("click", () => $(b.dataset.for).click()));
@@ -4366,7 +4390,16 @@ $("btnMore").addEventListener("click", (e) => {
   m.style.right = Math.max(8, window.innerWidth - r.right) + "px";
   m.classList.add("show");
 });
-document.addEventListener("pointerdown", (e) => { if (!e.target.closest("#moreMenu, #btnMore")) closeMore(); });
+// 用「捕捉」階段先處理：選單開著時點外面＝只是關選單，不會同時在畫布上畫東西或打字
+document.addEventListener("pointerdown", (e) => {
+  if (!$("moreMenu").classList.contains("show") || e.target.closest("#moreMenu, #btnMore")) return;
+  closeMore();
+  if (e.target.closest("#stage")) { e.stopPropagation(); e.preventDefault(); swallowClick = true; }
+}, true);
+// 關選單那一下產生的 click 也吞掉
+let swallowClick = false;
+document.addEventListener("click", (e) => { if (swallowClick) { swallowClick = false; e.stopPropagation(); e.preventDefault(); } }, true);
+document.addEventListener("pointerup", () => { setTimeout(() => { swallowClick = false; }, 0); }, true);
 $("moreMenu").addEventListener("click", (e) => { if (e.target.closest("button")) closeMore(); });
 $("btnClear").addEventListener("click", () => {
   const locked = doc.layers.filter((l) => l.locked);
@@ -4910,8 +4943,13 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.9";
+const APP_VERSION = "2026.11.08";
 const CHANGELOG = [
+  ["2026.11.08", [
+    "自動分圖層：牆壁畫在「牆壁」、符號在「設備」、尺寸和文字在「標註」，要隱藏標註或鎖住牆壁更方便（設定裡可以關）",
+    "點「⋯」選單外面關閉時，不會再順便在圖上畫到東西",
+    "設定、圖層等視窗，點外面的暗處就能關閉",
+  ]],
   ["2026.11.07.9", [
     "下方符號列可以用手指左右滑動，符號再多也找得到",
   ]],
