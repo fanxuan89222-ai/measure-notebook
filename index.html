@@ -380,7 +380,7 @@
   /* 大小預設（三個圓點）＋ 滑桿，像 GoodNotes */
   .preset { width: 44px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0; }
   .preset i { display: block; border-radius: 50%; background: var(--ink); }
-  #eraserBar .preset i { background: #f1f3f7; border: 2px solid #8f98ad; box-sizing: border-box; }
+  #eraserBar .preset i { background: #f1f3f7; border: 2px solid #8f98ad; box-sizing: border-box; border-radius: 3px; }   /* 橡皮擦是正方形 */
   .preset.on { background: var(--selSoft); box-shadow: inset 0 0 0 1.5px var(--sel); }
   .sizeSlider { width: 140px; accent-color: var(--sel); flex: 0 0 auto; }
   .sizeNum { width: 56px; font: inherit; font-size: 15px; height: 36px; padding: 0 6px; text-align: center; border: 1px solid transparent; border-radius: 10px; background: var(--ground); color: var(--ink); -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
@@ -639,7 +639,6 @@
       <span>橡皮擦</span>
       <button class="preset" data-i="0"><i></i></button>
       <button class="preset" data-i="1"><i></i></button>
-      <button class="preset" data-i="2"><i></i></button>
       <input type="range" class="sizeSlider" id="eraserSlider" min="4" max="120" step="1">
       <input type="number" class="sizeNum" id="eraserNum" min="4" max="120" step="1" inputmode="numeric">
     </div>
@@ -1259,7 +1258,7 @@ let ui = {
   view: { x: 0, y: 0, z: 1 },     // 畫布平移與縮放
   eraserR: 18,                    // 橡皮擦半徑（螢幕像素）＝目前選的預設
   penSizes: [2, 3.5, 6], penIdx: 1,         // 畫筆三個預設粗細（可用滑桿自訂）
-  eraserSizes: [8, 18, 36], eraserIdx: 1,   // 橡皮擦三個預設大小
+  eraserSizes: [14, 40], eraserIdx: 0,   // 橡皮擦兩個預設大小（正方形的半邊長，螢幕像素）
   myColors: [],                             // 我的色盤
   dimMode: "free",                          // 尺寸標註方式：free（自由）／each（每畫一筆就輸入）
   dimUnit: "cm",                            // 新圖預設單位
@@ -1324,8 +1323,17 @@ function applyPrefs(p) {
   if (Array.isArray(p.wallSizes) && p.wallSizes.length === 2) ui.wallSizes = p.wallSizes;
   ui.wallIdx = p.wallIdx ?? 0;
   if (Array.isArray(p.penSizes) && p.penSizes.length === 3) ui.penSizes = p.penSizes;
-  if (Array.isArray(p.eraserSizes) && p.eraserSizes.length === 3) ui.eraserSizes = p.eraserSizes;
-  ui.penIdx = p.penIdx ?? 1; ui.eraserIdx = p.eraserIdx ?? 1;
+  ui.penIdx = p.penIdx ?? 1; ui.eraserIdx = p.eraserIdx ?? 0;
+  if (Array.isArray(p.eraserSizes) && p.eraserSizes.length === 2) ui.eraserSizes = p.eraserSizes;
+  else if (Array.isArray(p.eraserSizes) && p.eraserSizes.length === 3) {
+    // 舊版有三個預設：留中、大兩個（使用者調過的大小不會不見）
+    const two = [p.eraserSizes[1], p.eraserSizes[2]];
+    const picked = p.eraserSizes[p.eraserIdx ?? 1];
+    ui.eraserSizes = two.slice().sort((x, y) => x - y);   // 小的在左、大的在右
+    ui.eraserIdx = ui.eraserSizes.indexOf(picked);
+    if (ui.eraserIdx < 0) ui.eraserIdx = 0;   // 原本選最小的那個（被拿掉了）→ 用小的
+  }
+  if (ui.eraserIdx > 1) ui.eraserIdx = 1;
   if (Array.isArray(p.myColors)) ui.myColors = p.myColors;
   if (Array.isArray(p.colorSlots) && p.colorSlots.length === 4) ui.colorSlots = p.colorSlots;
   ui.colorIdx = p.colorIdx ?? 0;
@@ -2635,6 +2643,21 @@ function densify(pts, step) {
   }
   return out;
 }
+// 正方形橡皮擦從 a 移到 b 掃過的範圍，有沒有碰到點 p（h＝正方形的半邊長）
+// 做法：橡皮擦中心在 a→b 線上某個位置 t（0~1）時，p 跟中心的 x 差、y 差都 ≤ h 就算碰到；
+// 分別算出 x、y 方向成立的 t 範圍，兩個範圍有重疊（而且在 0~1 之間）就是有碰到
+function squareSweepHit(p, a, b, h) {
+  let lo = 0, hi = 1;
+  for (const k of [0, 1]) {
+    const d = b[k] - a[k], off = p[k] - a[k];
+    if (Math.abs(d) < 1e-9) { if (Math.abs(off) > h) return false; continue; }
+    let t1 = (off - h) / d, t2 = (off + h) / d;
+    if (t1 > t2) [t1, t2] = [t2, t1];
+    lo = Math.max(lo, t1); hi = Math.min(hi, t2);
+    if (lo > hi) return false;
+  }
+  return true;
+}
 // 橡皮擦從 a 移動到 b：掃過的範圍內的線段都擦掉（移動很快也不會漏擦）
 function eraseSeg(a, b) {
   const r = ui.eraserR / ui.view.z;
@@ -2656,7 +2679,7 @@ function eraseSeg(a, b) {
     let cur = [];
     let cut = false;
     for (const p of dense) {
-      if (distToSeg(p, a, b) <= hitR) { cut = true; if (cur.length) { pieces.push(cur); cur = []; } }
+      if (squareSweepHit(p, a, b, hitR)) { cut = true; if (cur.length) { pieces.push(cur); cur = []; } }
       else cur.push(p);
     }
     if (cur.length) pieces.push(cur);
@@ -2675,9 +2698,10 @@ function eraseSeg(a, b) {
   if (ui.selectedId && !doc.items.some((i) => i.id === ui.selectedId)) ui.selectedId = null;
   render();
 }
-// 橡皮擦的圓形游標（大小固定在螢幕上，不隨縮放改變）
+// 橡皮擦的正方形游標（大小固定在螢幕上，不隨縮放改變）
 function showEraserCursor(wx, wy) {
-  liveG.innerHTML = `<circle cx="${wx}" cy="${wy}" r="${ui.eraserR / ui.view.z}" fill="rgba(240,238,234,0.55)"
+  const h = ui.eraserR / ui.view.z;
+  liveG.innerHTML = `<rect x="${wx - h}" y="${wy - h}" width="${h * 2}" height="${h * 2}" rx="${2 / ui.view.z}" fill="rgba(240,238,234,0.55)"
     stroke="#9a968e" stroke-width="${1.5 / ui.view.z}"/>`;
 }
 
@@ -4000,7 +4024,7 @@ $("dimCheck").addEventListener("change", (e) => { ui.dimCheck = e.target.checked
 $("btnSettings").addEventListener("click", () => { refreshSettings(); $("settingsModal").classList.add("show"); });
 $("settingsClose").addEventListener("click", () => $("settingsModal").classList.remove("show"));
 
-/* ---------- 畫筆、橡皮擦：三個預設大小 + 滑桿自訂 ----------
+/* ---------- 畫筆三個、橡皮擦兩個預設大小 + 滑桿自訂 ----------
    點圓點＝切換預設；拉滑桿＝改目前這個預設的大小（會記住） */
 function refreshSizeBars() {
   // 預設圓點的大小：用開根號，細的筆也看得出差別
@@ -4787,8 +4811,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.5";
+const APP_VERSION = "2026.11.07.6";
 const CHANGELOG = [
+  ["2026.11.07.6", [
+    "橡皮擦改成正方形，擦直角、貼著牆擦比較好擦；大小預設改成兩個（小、大）",
+  ]],
   ["2026.11.07.5", [
     "照比例模式：畫完矩形，可以直接輸入寬和深（像 CAD 一樣）",
     "設定、圖層、顏色視窗右上角多了 ×，不用滑到最下面按完成",
