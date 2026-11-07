@@ -745,7 +745,7 @@
 <div class="modal" id="textModal">
   <div class="dialog">
     <h3 id="textTitle">輸入文字</h3>
-    <textarea id="textInput" rows="2" placeholder="例如：245、天花板高 260、管道間"></textarea>
+    <textarea id="textInput" rows="2" placeholder="例如：245、天花板高 260、柱子"></textarea>
     <div class="chipHead" id="chipHead">常用字 <button id="chipEdit">編輯</button></div>
     <div class="chips" id="textChips"></div>
     <!-- 一般模式 -->
@@ -1458,6 +1458,10 @@ function applyPrefs(p) {
   if (p.paper) ui.paper = p.paper;
   if (p.dimSize) ui.dimSize = p.dimSize;
   if (p.chipSets) ui.chipSets = p.chipSets;
+  // 舊版預設的 12 個常用字（沒改過的）→ 換成新的預設三個；自己改過的不動
+  const OLD_WORDS = "天花板高,管道間,糞管,排水,冷熱水,插座,樑,柱,窗台高,門高,不拆,要拆";
+  if (ui.chipSets && ui.chipSets.text && ui.chipSets.text.join(",") === OLD_WORDS) delete ui.chipSets.text;
+  if (ui.quickWords && ui.quickWords.join(",") === OLD_WORDS) ui.quickWords = null;
   if (Array.isArray(p.trayOrder)) ui.trayOrder = p.trayOrder;
   if (Array.isArray(p.trayHidden)) ui.trayHidden = p.trayHidden;
   if (p.dimStyle) ui.dimStyle = p.dimStyle;
@@ -4418,7 +4422,7 @@ $("stage").addEventListener("pointerdown", (e) => {
 /* ===================== 對話框 ===================== */
 let textCallback = null;
 // 常用字，點一下就填入，業務不用一直打字
-const QUICK_WORDS = ["天花板高", "管道間", "糞管", "排水", "冷熱水", "插座", "樑", "柱", "窗台高", "門高", "不拆", "要拆"];
+const QUICK_WORDS = ["天花板高", "寬度", "柱子"];   // 預設只放最常用的三個，其他的自己按「編輯」加
 const quickWords = () => ui.quickWords || QUICK_WORDS;
 // words：這次要顯示的常用字；editable：是不是「一般文字」的常用字（只有它可以編輯）
 let chipState = { words: [], editable: false, editing: false, draft: [] };
@@ -4428,7 +4432,7 @@ const CHIP_DEFAULTS = {
   folder: ["建案", "已完成", "進行中"],
   sym: ["馬桶", "面盆", "浴櫃", "樓梯", "櫥櫃", "洗衣機", "模板"],
 };
-const CHIP_HINTS = { text: "例如：245、天花板高 260、管道間", folder: "例如：福興段建案、王先生", sym: "例如：我的浴櫃" };
+const CHIP_HINTS = { text: "例如：245、天花板高 260、柱子", folder: "例如：福興段建案、王先生", sym: "例如：我的浴櫃" };
 const chipWords = (key) => (ui.chipSets && ui.chipSets[key]) || (key === "text" && ui.quickWords) || CHIP_DEFAULTS[key] || [];
 // words：傳陣列＝固定的字（不能編輯，[] 表示不顯示）；傳字串＝哪一組常用字（可以編輯）
 function openTextDialog(initial, cb, title = "輸入文字", words = "text") {
@@ -5099,7 +5103,7 @@ const CHANGELOG = [
     "文字：點哪裡就在哪裡直接打字（像 GoodNotes），常用字在打字框下面",
     "文字可以旋轉：選取後拖上面的圓點，或按「旋轉 90°」",
     "用尺寸工具拉的標註量過的牆，「?」提醒會自動消失",
-    "牆厚預設改成 10 cm 和 20 cm",
+    "牆厚預設改成 10 cm 和 20 cm；文字常用字預設改成「天花板高、寬度、柱子」",
   ]],
   ["2026.11.08", [
     "自動分圖層：牆壁畫在「牆壁」、符號在「設備」、尺寸和文字在「標註」，要隱藏標註或鎖住牆壁更方便（設定裡可以關）",
