@@ -887,6 +887,34 @@ function drainSvg(x, y, s, m, t) {
   return out;
 }
 
+// 床：外框＋床頭板＋枕頭（[x, 寬] 的清單）＋棉被上緣＋右下反摺的一角
+function bedSvg(w, pillows, m, t) {
+  let out = `<rect x="0" y="0" width="${w}" height="188" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+    + `<rect x="0" y="0" width="${w}" height="9" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+  for (const [x, pw] of pillows) out += `<rect x="${x}" y="15" width="${pw}" height="30" rx="7" fill="#fff" stroke="${INK}" stroke-width="${t}"/>`;
+  out += `<line x1="0" y1="62" x2="${w}" y2="62" stroke="${INK}" stroke-width="${t}"/>`
+    + `<path d="M${w - 34} 62 L${w} 96" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+    + `<path d="M${w - 34} 62 L${w - 30} 92 L${w} 96" fill="none" stroke="${INK}" stroke-width="${t}"/>`;
+  return out;
+}
+// 沙發：n 個坐墊；椅背在上（y 0~22），兩邊扶手寬 22
+function sofaSvg(w, n, m, t) {
+  const inner = w - 44, cw = inner / n;
+  let out = `<rect x="0" y="0" width="${w}" height="90" rx="6" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+    + `<rect x="0" y="0" width="${w}" height="22" rx="6" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+  for (let i = 0; i < n; i++) out += `<rect x="${22 + i * cw + 1.5}" y="24" width="${cw - 3}" height="62" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>`;
+  out += `<rect x="0" y="0" width="22" height="90" rx="6" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+    + `<rect x="${w - 22}" y="0" width="22" height="90" rx="6" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+  return out;
+}
+// 椅子：坐墊＋椅背；backTop＝椅背在上方（椅子面向下）
+function chairSvg(x, y, w, h, m, t, backTop) {
+  const by = backTop ? y : y + h - 6;
+  const sy = backTop ? y + 5 : y;
+  return `<rect x="${x}" y="${sy}" width="${w}" height="${h - 5}" rx="5" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+    + `<rect x="${x + 2}" y="${by}" width="${w - 4}" height="6" rx="2" fill="#fff" stroke="${INK}" stroke-width="${t}"/>`;
+}
+
 const SYMBOLS = {
   toilet: {
     cat: "bath", name: "坐式馬桶", w: 40, h: 70,
@@ -1027,6 +1055,114 @@ const SYMBOLS = {
     cat: "bath", name: "蓮蓬頭", w: 20, h: 20,
     draw: (m, t) => showerheadSvg(10, 12, 7.5, m, t)
   },
+  /* ===================== 臥室（尺寸都是公分，俯視圖） ===================== */
+  bedSingle: {
+    // 單人床 3.5 尺：床框＋床頭板＋一個枕頭＋棉被反摺一角
+    cat: "bedroom", name: "單人床", w: 106, h: 188,
+    draw: (m, t) => bedSvg(106, [[14, 78]], m, t)
+  },
+  bedDouble: {
+    // 雙人床 5 尺
+    cat: "bedroom", name: "雙人床", w: 152, h: 188,
+    draw: (m, t) => bedSvg(152, [[10, 60], [82, 60]], m, t)
+  },
+  bedKing: {
+    // 雙人加大 6 尺
+    cat: "bedroom", name: "雙人加大床", w: 182, h: 188,
+    draw: (m, t) => bedSvg(182, [[12, 72], [98, 72]], m, t)
+  },
+  nightstand: {
+    // 床頭櫃：櫃子＋上面一盞檯燈（俯視是兩個圓）
+    cat: "bedroom", name: "床頭櫃", w: 45, h: 40,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="45" height="40" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <circle cx="22.5" cy="20" r="11" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <circle cx="22.5" cy="20" r="3" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+  },
+  desk: {
+    // 書桌＋椅子（椅子半塞在桌下）
+    cat: "bedroom", name: "書桌", w: 120, h: 88,
+    draw: (m, t) => chairSvg(40, 52, 40, 36, m, t, false) + `
+      <rect x="0" y="0" width="120" height="60" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+  },
+  vanity: {
+    // 化妝台：桌面＋靠牆的鏡子＋圓凳
+    cat: "bedroom", name: "化妝台", w: 100, h: 82,
+    draw: (m, t) => `
+      <circle cx="50" cy="64" r="16" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="0" y="0" width="100" height="45" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="25" y="3" width="50" height="5" rx="1" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+  },
+
+  /* ===================== 客廳 ===================== */
+  sofa3: {
+    // 三人沙發：椅背＋兩邊扶手＋三個坐墊
+    cat: "living", name: "三人沙發", w: 210, h: 90,
+    draw: (m, t) => sofaSvg(210, 3, m, t)
+  },
+  sofa2: {
+    cat: "living", name: "雙人沙發", w: 160, h: 90,
+    draw: (m, t) => sofaSvg(160, 2, m, t)
+  },
+  armchair: {
+    cat: "living", name: "單人沙發", w: 90, h: 90,
+    draw: (m, t) => sofaSvg(90, 1, m, t)
+  },
+  sofaL: {
+    // L 型沙發：上面一排（椅背在上）＋右邊貴妃椅往下延伸
+    cat: "living", name: "L 型沙發", w: 260, h: 180,
+    draw: (m, t) => `
+      <path d="M4 0 H256 Q260 0 260 4 V176 Q260 180 256 180 H174 Q170 180 170 176 V90 H4 Q0 90 0 86 V4 Q0 0 4 0 Z" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <path d="M0 22 H238 V180" fill="none" stroke="${INK}" stroke-width="${m}"/>
+      <path d="M22 22 V90" fill="none" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="24" y="24" width="71" height="62" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <rect x="97" y="24" width="71" height="62" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <rect x="172" y="24" width="64" height="62" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <rect x="172" y="88" width="64" height="88" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+  },
+  coffeeTable: {
+    // 茶几：桌面＋內圈（玻璃或木紋邊）
+    cat: "living", name: "茶几", w: 120, h: 60,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="120" height="60" rx="4" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="7" y="7" width="106" height="46" rx="2" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+  },
+  tvCabinet: {
+    // 電視櫃：長櫃＋分格線＋上面的電視（俯視是一條薄長條）
+    cat: "living", name: "電視櫃", w: 180, h: 45,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="180" height="45" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <line x1="60" y1="0" x2="60" y2="45" stroke="${INK}" stroke-width="${t}" stroke-dasharray="3 2"/>
+      <line x1="120" y1="0" x2="120" y2="45" stroke="${INK}" stroke-width="${t}" stroke-dasharray="3 2"/>
+      <rect x="35" y="5" width="110" height="7" rx="1.5" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="80" y="12" width="20" height="8" fill="#fff" stroke="${INK}" stroke-width="${t}"/>`
+  },
+  dining4: {
+    // 四人餐桌：長桌＋上下各兩張椅子
+    cat: "living", name: "四人餐桌", w: 140, h: 140,
+    draw: (m, t) => chairSvg(20, 0, 42, 40, m, t, true) + chairSvg(78, 0, 42, 40, m, t, true)
+      + chairSvg(20, 100, 42, 40, m, t, false) + chairSvg(78, 100, 42, 40, m, t, false) + `
+      <rect x="0" y="30" width="140" height="80" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
+  },
+  diningRound: {
+    // 圓餐桌：圓桌＋四周四張椅子
+    cat: "living", name: "圓餐桌", w: 150, h: 150,
+    draw: (m, t) => {
+      let chairs = "";
+      for (const a of [0, 90, 180, 270]) chairs += `<g transform="rotate(${a} 75 75)">${chairSvg(54, 0, 42, 40, m, t, true)}</g>`;
+      return chairs + `<circle cx="75" cy="75" r="50" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+    }
+  },
+  plant: {
+    // 盆栽：花盆＋往外長的葉子
+    cat: "living", name: "盆栽", w: 50, h: 50,
+    draw: (m, t) => {
+      let leaves = "";
+      // 葉子不填色，才看得到下面的花盆
+      for (let i = 0; i < 8; i++) leaves += `<path d="M25 25 Q32 12 25 0 Q18 12 25 25 Z" transform="rotate(${i * 45 + 20} 25 25)" fill="none" stroke="${INK}" stroke-width="${t}"/>`;
+      return `<circle cx="25" cy="25" r="13" fill="#fff" stroke="${INK}" stroke-width="${m}"/>` + leaves + `<circle cx="25" cy="25" r="2.5" fill="${INK}"/>`;
+    }
+  }
 };
 /* ------------------------- 符號庫結束 ------------------------- */
 
@@ -2668,7 +2804,7 @@ $("folderColorClose").addEventListener("click", () => $("folderColorModal").clas
    上方分類標籤：全部／衛浴／門窗／收納家電／我的符號
    「✎ 排序」：每個符號下面有 ◀ ▶ 移動、👁 隱藏；排序和隱藏會記住（ui.trayOrder、ui.trayHidden）
    符號用代號表示：內建的是 SYMBOLS 的 key，我的符號是 "my:" + id */
-const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["storage", "收納家電"], ["mine", "我的符號"]];
+const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["bedroom", "臥室"], ["living", "客廳"], ["storage", "收納家電"], ["mine", "我的符號"]];
 let trayCat = "all", trayEditing = false;
 function trayKeys() {
   // 全部的代號，照使用者排的順序；新加的符號接在最後
@@ -4437,8 +4573,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07";
+const APP_VERSION = "2026.11.07.2";
 const CHANGELOG = [
+  ["2026.11.07.2", [
+    "符號列新增「臥室」：單人床、雙人床、雙人加大床、床頭櫃、書桌、化妝台",
+    "符號列新增「客廳」：三人／雙人／單人沙發、L 型沙發、茶几、電視櫃、四人餐桌、圓餐桌、盆栽",
+  ]],
   ["2026.11.07", [
     "新增「草圖／精畫」模式：現場隨手畫草圖，回辦公室切到精畫，草圖會變成淡淡的底稿讓你描",
     "新版面：工具列浮在紙上，畫圖空間更大；符號列可以收起來",
