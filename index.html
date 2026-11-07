@@ -299,6 +299,10 @@
   .seg { display: flex; gap: 2px; padding: 3px; background: var(--ground2); border-radius: 12px; }
   .seg button { flex: 1; padding: 9px 6px; font-size: 15px; background: transparent; border: none; border-radius: 9px; color: var(--ink); }
   .seg button.on { background: #fff; box-shadow: 0 1px 3px rgba(30,42,68,0.16); font-weight: 600; }
+  .themeSw { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; }
+  .themeSw button { border: none; background: transparent; padding: 6px 0 4px; border-radius: 12px; display: flex; flex-direction: column; align-items: center; gap: 5px; font-size: 12px; color: var(--ink2); }
+  .themeSw button i { width: 36px; height: 36px; border-radius: 10px; display: block; box-shadow: inset 0 1px 0 rgba(255,255,255,0.22), inset 0 -2px 0 rgba(0,0,0,0.22); }
+  .themeSw button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
   .paperSw { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
   .paperSw button { width: 42px; height: 42px; border-radius: 11px; padding: 0; border: none; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12); }
   .paperSw button.on { box-shadow: inset 0 0 0 1px rgba(0,0,0,0.12), 0 0 0 2px #fff, 0 0 0 4px var(--sel); }
@@ -730,6 +734,9 @@
 
     <section>
       <h4>版面（所有圖共用）</h4>
+      <div class="setRow"><span>主題顏色<small>分頁列、選中的工具、選取框的顏色</small></span></div>
+      <div class="themeSw" id="themeSw"></div>
+      <div style="height:14px"></div>
       <div class="setRow"><span>工具列位置<small>左撇子可以放右邊</small></span></div>
       <div class="seg" id="posGrid">
         <button data-pos="left">左</button><button data-pos="right">右</button><button data-pos="top">上</button><button data-pos="bottom">下</button>
@@ -1095,7 +1102,7 @@ function prefsObj() {
   return { toolbarPos: ui.toolbarPos, wallSizes: ui.wallSizes, wallIdx: ui.wallIdx, penSizes: ui.penSizes, penIdx: ui.penIdx,
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
     quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill,
-    trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle,
+    trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
 }
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefsObj())); } catch (e) { /* 存不了就算了 */ } }
@@ -1121,6 +1128,7 @@ function applyPrefs(p) {
   if (p.scale) ui.scale = p.scale;
   ui.trayCollapsed = !!p.trayCollapsed;
   ui.exportTitle = !!p.exportTitle;
+  if (p.theme) ui.theme = p.theme;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
   if (p.shapeFill) ui.shapeFill = p.shapeFill;
@@ -1670,15 +1678,15 @@ function renderOverlay() {
   if (isArrow(it) || it.type === "dim") {
     // 箭頭、自由標註：兩端各一個圓點，拖曳改位置
     const pts = arrowPts(it);
-    overlayG.innerHTML = `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join(" ")}" fill="none" stroke="#3d5fd9" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>`
-      + `<circle data-handle="p1" cx="${it.x1}" cy="${it.y1}" r="${hr}" fill="#fff" stroke="#3d5fd9" stroke-width="${sw * 1.5}"/>`
-      + `<circle data-handle="p2" cx="${it.x2}" cy="${it.y2}" r="${hr}" fill="#3d5fd9" stroke="#fff" stroke-width="${sw}"/>`;
+    overlayG.innerHTML = `<path d="${pts.map((p, i) => `${i ? "L" : "M"}${p[0]} ${p[1]}`).join(" ")}" fill="none" stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>`
+      + `<circle data-handle="p1" cx="${it.x1}" cy="${it.y1}" r="${hr}" fill="#fff" stroke="${SELC}" stroke-width="${sw * 1.5}"/>`
+      + `<circle data-handle="p2" cx="${it.x2}" cy="${it.y2}" r="${hr}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>`;
     return;
   }
   if (isShapeBox(it)) {
     const pad = 6 / z;
-    overlayG.innerHTML = `<rect x="${it.x - pad}" y="${it.y - pad}" width="${it.w + pad * 2}" height="${it.h + pad * 2}" fill="none" stroke="#3d5fd9" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>`
-      + `<rect data-handle="resize" x="${it.x + it.w + pad - hr}" y="${it.y + it.h + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="#3d5fd9" stroke="#fff" stroke-width="${sw}"/>`;
+    overlayG.innerHTML = `<rect x="${it.x - pad}" y="${it.y - pad}" width="${it.w + pad * 2}" height="${it.h + pad * 2}" fill="none" stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>`
+      + `<rect data-handle="resize" x="${it.x + it.w + pad - hr}" y="${it.y + it.h + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>`;
     return;
   }
   if (isSym) {
@@ -1687,12 +1695,12 @@ function renderOverlay() {
     overlayG.innerHTML = `
       <g transform="translate(${it.x},${it.y}) rotate(${it.rot},${W / 2},${H / 2})">
         <rect x="${-pad}" y="${-pad}" width="${W + pad * 2}" height="${H + pad * 2}" fill="none"
-          stroke="#3d5fd9" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>
-        <line x1="${W / 2}" y1="${-pad}" x2="${W / 2}" y2="${-pad - 30 / z}" stroke="#3d5fd9" stroke-width="${sw}"/>
-        <circle data-handle="rotate" cx="${W / 2}" cy="${-pad - 30 / z}" r="${hr}" fill="#fff" stroke="#3d5fd9" stroke-width="${sw * 1.5}"/>
-        <path d="M${W / 2 - hr * 0.45} ${-pad - 30 / z} a${hr * 0.45} ${hr * 0.45} 0 1 1 ${hr * 0.45} ${hr * 0.45}" fill="none" stroke="#3d5fd9" stroke-width="${sw}" pointer-events="none"/>
+          stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>
+        <line x1="${W / 2}" y1="${-pad}" x2="${W / 2}" y2="${-pad - 30 / z}" stroke="${SELC}" stroke-width="${sw}"/>
+        <circle data-handle="rotate" cx="${W / 2}" cy="${-pad - 30 / z}" r="${hr}" fill="#fff" stroke="${SELC}" stroke-width="${sw * 1.5}"/>
+        <path d="M${W / 2 - hr * 0.45} ${-pad - 30 / z} a${hr * 0.45} ${hr * 0.45} 0 1 1 ${hr * 0.45} ${hr * 0.45}" fill="none" stroke="${SELC}" stroke-width="${sw}" pointer-events="none"/>
         <rect data-handle="resize" x="${W + pad - hr}" y="${H + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}"
-          fill="#3d5fd9" stroke="#fff" stroke-width="${sw}"/>
+          fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>
       </g>`;
   } else {
     const el = contentG.querySelector(`[data-id="${it.id}"]`);
@@ -1702,10 +1710,10 @@ function renderOverlay() {
     let handle = "";
     if (isText) {
       // 文字：右下角拖曳可改字體大小
-      handle = `<rect data-handle="resize" x="${b.x + b.width + pad - hr}" y="${b.y + b.height + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="#3d5fd9" stroke="#fff" stroke-width="${sw}"/>`;
+      handle = `<rect data-handle="resize" x="${b.x + b.width + pad - hr}" y="${b.y + b.height + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>`;
     }
     overlayG.innerHTML = `<rect x="${b.x - pad}" y="${b.y - pad}" width="${b.width + pad * 2}" height="${b.height + pad * 2}"
-      fill="none" stroke="#3d5fd9" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>${handle}`;
+      fill="none" stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>${handle}`;
   }
 }
 
@@ -2562,6 +2570,44 @@ const ICON = {
   emptyDoc: `<svg viewBox="0 0 120 90" fill="none"><rect x="22" y="8" width="76" height="74" rx="8" fill="#fff" stroke="#c9d1e0" stroke-width="2"/><path d="M36 26h48v38H36z" stroke="#263457" stroke-width="3" stroke-linejoin="round"/><path d="M60 26v16h24" stroke="#263457" stroke-width="2"/><path d="M36 72h20" stroke="#c2562f" stroke-width="2.5" stroke-linecap="round"/></svg>`,
 };
 
+/* ---------- 主題顏色（所有圖共用，存在 ui.theme） ----------
+   每個主題：深色（分頁列、選中的工具）、亮色（選取框、目前選項）、亮色的淡底、底色、深一點的底色
+   想加主題就在這裡多加一行 */
+const THEMES = [
+  ["blue",   "藍",   "#263457", "#3d5fd9", "#e8edfc", "#eef1f6", "#e3e8f0"],
+  ["teal",   "湖水", "#1f4650", "#16808f", "#dff2f4", "#edf4f5", "#dfeaec"],
+  ["green",  "墨綠", "#24463a", "#2b8058", "#e2f2e9", "#eef3f0", "#e1eae4"],
+  ["purple", "紫",   "#3a2d5c", "#6a4fd0", "#eeeafc", "#f1eff6", "#e6e2f0"],
+  ["pink",   "櫻花", "#6b2f4a", "#c63f78", "#fbe8f0", "#f7f0f3", "#efe2e8"],
+  ["brown",  "陶土", "#4a3226", "#a94f2a", "#fbebe3", "#f4f0ec", "#ebe4dd"],
+  ["gray",   "石墨", "#2b2f36", "#3a73b8", "#e6eef8", "#f0f1f3", "#e4e6ea"],
+];
+let SELC = "#3d5fd9";   // 選取框顏色（畫在 SVG 裡要用實際色碼）
+function applyTheme(key) {
+  const t = THEMES.find((x) => x[0] === key) || THEMES[0];
+  const st = document.documentElement.style;
+  st.setProperty("--navy", t[2]); st.setProperty("--sel", t[3]); st.setProperty("--selSoft", t[4]);
+  st.setProperty("--ground", t[5]); st.setProperty("--ground2", t[6]);
+  SELC = t[3]; DESK = t[6];
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", t[2]);
+  document.querySelectorAll("#themeSw button").forEach((b) => b.classList.toggle("on", b.dataset.k === t[0]));
+}
+function renderThemeSw() {
+  const box = $("themeSw");
+  box.innerHTML = "";
+  for (const [key, name, dark, sel] of THEMES) {
+    const b = document.createElement("button");
+    b.dataset.k = key;
+    b.innerHTML = `<i style="background:linear-gradient(135deg, ${dark} 0 50%, ${sel} 50% 100%)"></i>${name}`;
+    b.classList.toggle("on", key === (ui.theme || "blue"));
+    b.addEventListener("click", () => {
+      ui.theme = key; savePrefs(); applyTheme(key);
+      if (curRec) { applyPaper(); renderOverlay(); }   // 紙張外面的桌面、選取框也換色
+    });
+    box.appendChild(b);
+  }
+}
+
 /* ---------- 資料夾顏色：每個顏色有「後面那片（深）」和「前面那片（淺）」 ---------- */
 const FOLDER_COLORS = [
   ["blue", "藍", "#b9c6e4", "#d3ddf1"],
@@ -2732,7 +2778,7 @@ function addSymbol(key) {
   ui.selectedId = it.id;
   setTool("select");
   afterChange();
-  toast("拖曳移動，藍色方塊縮放，上方圓點旋轉");
+  toast("拖曳移動，右下角方塊縮放，上方圓點旋轉");
 }
 
 
@@ -2962,7 +3008,7 @@ function insertImage(src, w, h, assetId) {
   ui.selectedId = it.id;
   setTool("select");
   afterChange();
-  toast("拖曳移動，藍色方塊縮放；描圖時可以調「透明度」");
+  toast("拖曳移動，右下角方塊縮放；描圖時可以調「透明度」");
 }
 $("selOpacity").addEventListener("click", () => {
   const it = selected(); if (!it || it.type !== "img") return;
@@ -3485,7 +3531,7 @@ const PAPERS = [["#ffffff", "白"], ["#fbf8f1", "米白"], ["#fdf6d8", "淺黃"]
    紙的左上角對齊格線（100 的倍數），格線才會剛好從紙邊開始。
    doc.paper = { color, pattern, size: "infinite"|"A4"|"A3", orient: "portrait"|"landscape", px, py } */
 const PAGE_SIZES = { A4: [794, 1123], A3: [1123, 1587] };
-const DESK = "#dde2ea";   // 紙張外面「桌面」的顏色
+let DESK = "#e3e8f0";   // 紙張外面「桌面」的顏色（跟著主題變）
 const pattFill = (p) => (p.pattern === "dots" ? "url(#dotGrid)" : p.pattern === "blank" ? "none" : "url(#gridMajor)");
 function pageSize(p) {
   const s = PAGE_SIZES[p && p.size];
@@ -4343,6 +4389,7 @@ async function init() {
   buildTray();
   refreshSizeBars();
   setToolbarPos(ui.toolbarPos);
+  renderThemeSw(); applyTheme(ui.theme);
   refreshWallBar();
   refreshShapeBar();
   ui.color = ui.colorSlots[ui.colorIdx] || ui.colorSlots[0];
