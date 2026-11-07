@@ -464,6 +464,19 @@
   .symCtl i svg { width: 16px; height: 16px; pointer-events: none; }
   .trayNote { color: var(--ink2); font-size: 14px; padding: 30px 10px; }
 
+  /* 直接在圖上打字 */
+  #inlineText { position: absolute; z-index: 5; display: none; }
+  #inlineText.show { display: block; }
+  #itIn { display: block; min-width: 120px; padding: 2px 4px; border: 1.5px dashed var(--sel); border-radius: 6px; background: rgba(255,255,255,0.88);
+    font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; font-weight: 500; resize: none; overflow: hidden; white-space: pre;
+    outline: none; -webkit-user-select: text; user-select: text; box-sizing: content-box; }
+  #inlineText .itBar { position: absolute; left: 0; top: calc(100% + 8px); display: flex; align-items: center; gap: 6px; padding: 5px; background: #fff;
+    border-radius: 14px; box-shadow: var(--floatHi); max-width: min(560px, 80vw); }
+  #itChips { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; min-width: 0; }
+  #itChips button { flex: 0 0 auto; border: none; background: var(--ground); border-radius: 9px; padding: 6px 10px; font-size: 14px; white-space: nowrap; }
+  #itMore { flex: 0 0 auto; width: 34px; height: 34px; border: none; background: transparent; color: var(--ink2); font-size: 18px; padding: 0; }
+  #itDone { flex: 0 0 auto; height: 34px; padding: 0 12px; }
+
   /* 畫完直線的長度輸入框 */
   #lenPop { position: absolute; z-index: 4; display: none; align-items: center; gap: 6px; padding: 6px 6px 6px 10px;
     background: #fff; border-radius: 14px; box-shadow: var(--floatHi); }
@@ -704,6 +717,11 @@
       <button id="selFront"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M5 8H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-1"/></svg>移到最上層</button>
       <select id="selLayer" title="移到圖層"></select>
       <button id="selDel" class="del"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>刪除</button>
+    </div>
+    <!-- 直接在圖上打字的框 -->
+    <div id="inlineText">
+      <textarea id="itIn" rows="1" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="輸入文字"></textarea>
+      <div class="itBar"><div id="itChips"></div><button type="button" id="itMore" title="更多（編輯常用字）">⋯</button><button type="button" class="btn primary" id="itDone">完成</button></div>
     </div>
     <!-- 照比例模式：畫完直線跳出的長度輸入框 -->
     <form id="lenPop" autocomplete="off">
@@ -1347,7 +1365,7 @@ let doc = newDoc();
 let ui = {
   tool: "pen", color: "#1a1a1a", widthIdx: 1,
   wallCm: 12,                     // 牆壁筆目前的牆厚（公分）＝目前選的預設
-  wallSizes: [12, 24], wallIdx: 0, // 牆厚兩格預設（12＝半B磚牆／輕隔間、24＝1B磚牆／外牆），可自訂
+  wallSizes: [10, 20], wallIdx: 0, // 牆厚兩格預設（10＝隔間牆、20＝外牆），可自訂
   toolbarPos: "left",             // 工具列位置：left / right / top / bottom
   selectedId: null, freeStretch: false,
   view: { x: 0, y: 0, z: 1 },     // 畫布平移與縮放
@@ -1416,6 +1434,9 @@ function applyPrefs(p) {
   if (!p) return;
   ui.toolbarPos = p.toolbarPos || "left";
   if (Array.isArray(p.wallSizes) && p.wallSizes.length === 2) ui.wallSizes = p.wallSizes;
+  // 舊的預設 12／24 → 新的預設 10／20（自己改過的值不動）
+  if (ui.wallSizes[0] === 12) ui.wallSizes[0] = 10;
+  if (ui.wallSizes[1] === 24) ui.wallSizes[1] = 20;
   ui.wallIdx = p.wallIdx ?? 0;
   if (Array.isArray(p.penSizes) && p.penSizes.length === 3) ui.penSizes = p.penSizes;
   ui.penIdx = p.penIdx ?? 1; ui.eraserIdx = p.eraserIdx ?? 0;
@@ -1652,12 +1673,23 @@ function strokePath(pts, straight) {
 function escapeXml(s) {
   return String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 }
+// 文字大約多寬多高（不用量畫面，畫面和匯出算出來一樣）：中文字 1 個字寬、英數字約 0.6 個字寬
+function textDims(it) {
+  const lines = String(it.text).split("\n");
+  const w = Math.max(...lines.map((ln) => [...ln].reduce((s, c) => s + (c.charCodeAt(0) > 255 ? 1 : 0.6), 0))) * it.size;
+  return [Math.max(w, it.size * 0.6), it.size * (1 + (lines.length - 1) * 1.25)];
+}
+// 文字的中心（旋轉的軸心）
+function textCenter(it) { const [w, h] = textDims(it); return [it.x + w / 2, it.y + h / 2]; }
 function textSvg(it) {
   // 多行文字：每一行一個 tspan
   const lines = String(it.text).split("\n");
   const tspans = lines.map((ln, i) => `<tspan x="${it.x}" dy="${i === 0 ? 0 : it.size * 1.25}">${escapeXml(ln)}</tspan>`).join("");
-  return `<text x="${it.x}" y="${it.y}" font-size="${it.size}" fill="${it.color}" dominant-baseline="hanging"
+  const t = `<text x="${it.x}" y="${it.y}" font-size="${it.size}" fill="${it.color}" dominant-baseline="hanging"
     font-family="-apple-system, PingFang TC, Noto Sans TC, sans-serif" font-weight="500">${tspans}</text>`;
+  if (!it.rot) return t;
+  const [cx, cy] = textCenter(it);
+  return `<g transform="rotate(${it.rot} ${cx} ${cy})">${t}</g>`;
 }
 
 // 線條的外觀：一般筆是一條線；牆壁筆像立可帶，外框線 + 淺灰填滿，寬度 = 牆厚
@@ -1741,6 +1773,7 @@ function itemSvg(it, forExport) {
       + (forExport ? "" : `<rect width="${W}" height="${H}" fill="transparent"/>`) + `</g>`;
   }
   if (it.type === "text") {
+    if (!forExport && it.id === inlineEditId) return "";   // 正在直接打字的那段：先藏起來，免得疊兩份
     return `<g${hit}>${textSvg(it)}</g>`;
   }
   return "";
@@ -1798,8 +1831,35 @@ function isRect(it) {
 function segMeasured(it, i) {
   const d = it.dims || {};
   if (d[i] && d[i].v) return true;
-  if (isRect(it)) { const o = (i + 2) % 4; return !!(d[o] && d[o].v); }
+  if (freeDimCovers(it, i)) return true;
+  if (isRect(it)) { const o = (i + 2) % 4; return !!(d[o] && d[o].v) || freeDimCovers(it, o); }
   return false;
+}
+// 有沒有一條「自由標註」（工具列的尺寸工具拉的）量的就是這一段：
+// 跟這段平行、兩端落在這段的兩頭附近（牆壁的話，量內面或外面都算，差半個牆厚）
+function freeDimCovers(it, i) {
+  const a = it.pts[i], b = it.pts[i + 1];
+  const L = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  if (L < 1) return false;
+  const ux = (b[0] - a[0]) / L, uy = (b[1] - a[1]) / L;
+  const tol = (it.wall ? it.width / 2 : 0) + 8;   // 容許的誤差（畫布單位，8 ≈ 4 公分）
+  for (const d of doc.items) {
+    if (d.type !== "dim" || !d.v || !layerOf(d).visible) continue;
+    const dx = d.x2 - d.x1, dy = d.y2 - d.y1, dl = Math.hypot(dx, dy);
+    if (dl < 1 || Math.abs((dx * uy - dy * ux) / dl) > 0.05) continue;   // 不平行
+    const t1 = (d.x1 - a[0]) * ux + (d.y1 - a[1]) * uy, t2 = (d.x2 - a[0]) * ux + (d.y2 - a[1]) * uy;
+    if (Math.abs(Math.min(t1, t2)) > tol || Math.abs(Math.max(t1, t2) - L) > tol) continue;   // 兩端對不上
+    const n1 = Math.abs(-(d.x1 - a[0]) * uy + (d.y1 - a[1]) * ux), n2 = Math.abs(-(d.x2 - a[0]) * uy + (d.y2 - a[1]) * ux);
+    if (n1 > tol + 4 || n2 > tol + 4) continue;   // 離這段太遠（量的是別條）
+    return true;
+  }
+  return false;
+}
+// 尺寸數字整理：「10.」→「10」、「.5」→「0.5」、全形數字轉半形
+function cleanDimValue(v) {
+  v = String(v).trim().replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
+  if (/^\d*\.?\d*$/.test(v)) { v = v.replace(/\.$/, ""); if (v.startsWith(".")) v = "0" + v; }
+  return v;
 }
 // 尺寸線放在哪一側：封閉形狀預設放外側，開放的線預設放上方／左方
 function segNormal(it, i) {
@@ -2031,7 +2091,7 @@ function renderOverlay() {
   $("selOpacity").style.display = it.type === "img" ? "" : "none";
   $("selSaveSym").style.display = it.type === "img" ? "" : "none";
   if (it.type === "img") $("selOpacity").textContent = `透明度 ${Math.round((it.opacity ?? 1) * 100)}%`;
-  $("selRotate").style.display = isSym ? "" : "none";
+  $("selRotate").style.display = isSym || isText ? "" : "none";
   $("selFlip").style.display = isSym ? "" : "none";
   $("selFree").style.display = isSym ? "" : "none";
   $("selFree").classList.toggle("on", ui.freeStretch);
@@ -2078,8 +2138,17 @@ function renderOverlay() {
     const pad = 8 / z;
     let handle = "";
     if (isText) {
-      // 文字：右下角拖曳可改字體大小
-      handle = `<rect data-handle="resize" x="${b.x + b.width + pad - hr}" y="${b.y + b.height + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>`;
+      // 文字：框跟著文字轉；上面圓點拖曳＝旋轉，右下角拖曳＝改字體大小
+      const tb = el.querySelector("text").getBBox();
+      const [cx, cy] = textCenter(it);
+      overlayG.innerHTML = `<g transform="rotate(${it.rot || 0} ${cx} ${cy})">
+        <rect x="${tb.x - pad}" y="${tb.y - pad}" width="${tb.width + pad * 2}" height="${tb.height + pad * 2}" fill="none" stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>
+        <line x1="${tb.x + tb.width / 2}" y1="${tb.y - pad}" x2="${tb.x + tb.width / 2}" y2="${tb.y - pad - 30 / z}" stroke="${SELC}" stroke-width="${sw}"/>
+        <circle data-handle="rotate" cx="${tb.x + tb.width / 2}" cy="${tb.y - pad - 30 / z}" r="${hr}" fill="#fff" stroke="${SELC}" stroke-width="${sw * 1.5}"/>
+        <path d="M${tb.x + tb.width / 2 - hr * 0.45} ${tb.y - pad - 30 / z} a${hr * 0.45} ${hr * 0.45} 0 1 1 ${hr * 0.45} ${hr * 0.45}" fill="none" stroke="${SELC}" stroke-width="${sw}" pointer-events="none"/>
+        <rect data-handle="resize" x="${tb.x + tb.width + pad - hr}" y="${tb.y + tb.height + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>
+      </g>`;
+      return;
     }
     overlayG.innerHTML = `<rect x="${b.x - pad}" y="${b.y - pad}" width="${b.width + pad * 2}" height="${b.height + pad * 2}"
       fill="none" stroke="${SELC}" stroke-width="${sw}" stroke-dasharray="${6 / z} ${4 / z}"/>${handle}`;
@@ -2618,13 +2687,9 @@ function endPointer(e) {
       else if (!doc.items.some((x) => segCount(x))) toast("先畫直線、矩形或牆，再來標尺寸");
     }
   } else if (a.type === "textTap") {
-    openTextDialog("", (txt) => {
-      if (!txt) return;
-      pushUndo();
-      const size = 22;
-      doc.items.push({ id: nextId++, type: "text", layer: layerFor("note"), x: a.wx, y: a.wy - size / 2, text: txt, size, color: ui.color });
-      afterChange();
-    });
+    // 像 GoodNotes：點哪裡，就在那裡出現打字框
+    const size = 22;
+    openInlineText({ x: a.wx, y: a.wy - size / 2, size, color: ui.color, text: "" });
   } else if (a.type === "move") {
     if (!a.moved) undoStack.pop();   // 只是點一下選取，不算一次修改
     afterChange();
@@ -2864,7 +2929,7 @@ function resizeItem(a, wx, wy) {
 
 function rotateItem(a, wx, wy) {
   const it = a.item;
-  const [cx, cy] = symCenter(it);
+  const [cx, cy] = it.type === "text" ? textCenter(it) : symCenter(it);
   let deg = (Math.atan2(wy - cy, wx - cx) * 180) / Math.PI + 90;
   deg = Math.round(deg / 15) * 15;   // 每 15° 一格，比較好對齊牆面
   it.rot = ((deg % 360) + 360) % 360;
@@ -3230,7 +3295,7 @@ function closeDim(ok) {
   if (ctx && ctx.free) {
     const it = doc.items.find((x) => x.id === ctx.id);
     if (!it) return;
-    const v = $("dimFields").querySelector("input").value.trim();
+    const v = cleanDimValue($("dimFields").querySelector("input").value);
     if (ok && v) { if (!ctx.isNew) pushUndo(); it.v = v; afterChange(); }
     else if (ctx.isNew) { doc.items = doc.items.filter((x) => x !== it); undoStack.pop(); afterChange(); }   // 新拉的取消＝不留
     return;
@@ -3238,7 +3303,7 @@ function closeDim(ok) {
   if (!ok || !ctx) return;
   const it = doc.items.find((x) => x.id === ctx.id);
   if (!it) return;
-  const vals = [...$("dimFields").querySelectorAll("input")].map((x) => x.value.trim());
+  const vals = [...$("dimFields").querySelectorAll("input")].map((x) => cleanDimValue(x.value));
   pushUndo();
   it.dims = it.dims || {};
   let warned = false;
@@ -4202,8 +4267,8 @@ bindNum("shapeNum", (v, d) => isFinite(v) && v > 0 && setShapeWidth(v, d));
 /* ===================== 選取工具列 ===================== */
 function selected() { return doc.items.find((i) => i.id === ui.selectedId); }
 $("selRotate").addEventListener("click", () => {
-  const it = selected(); if (!isBox(it)) return;
-  pushUndo(); it.rot = (it.rot + 90) % 360; afterChange();
+  const it = selected(); if (!it || !(isBox(it) || it.type === "text")) return;
+  pushUndo(); it.rot = ((it.rot || 0) + 90) % 360; afterChange();
 });
 $("selFlip").addEventListener("click", () => {
   const it = selected(); if (!isBox(it)) return;
@@ -4256,13 +4321,98 @@ function editSelectedText(it) {
     openTextDialog(it.text || "", (txt) => { pushUndo(); it.text = txt; afterChange(); }, "框內文字（備註）");
     return;
   }
-  openTextDialog(it.text, (txt) => {
-    pushUndo();
-    if (!txt) doc.items = doc.items.filter((i) => i !== it);
-    else it.text = txt;
-    afterChange();
-  }, "編輯文字");
+  openInlineText(it);   // 一般文字：直接在原位置編輯
 }
+
+/* ---------- 直接在圖上打字（像 GoodNotes） ----------
+   打字框出現在點的位置，字的大小、顏色跟最後的樣子一樣；下面一排是常用字。
+   完成的方式：按「完成」、點畫布其他地方、或收起鍵盤。清空再完成＝刪掉這段字。
+   target：已經存在的文字（編輯），或 {x, y, size, color, text:""}（新的） */
+var inlineEditId = null, inlineTarget = null;   // 用 var：畫面一開始畫圖時就會用到
+function openInlineText(target) {
+  if (inlineTarget) commitInlineText();
+  inlineTarget = target;
+  inlineEditId = target.id || null;
+  if (inlineEditId) render();   // 把原本那段藏起來
+  ui.selectedId = null; renderOverlay();
+  const box = $("inlineText"), ta = $("itIn"), v = ui.view;
+  // iPad 的鍵盤會蓋住下半部：點的位置太下面，就把畫面往上移，讓打字框在上面三分之一
+  const H = $("stageWrap").clientHeight, sy = target.y * v.z + v.y;
+  if (sy > H * 0.4) { v.y -= sy - H * 0.3; applyView(); renderOverlay(); }
+  ta.value = target.text || "";
+  ta.style.fontSize = target.size * v.z + "px";
+  ta.style.lineHeight = "1.25";
+  ta.style.color = target.color;
+  box.style.left = target.x * v.z + v.x - 6 + "px";
+  box.style.top = target.y * v.z + v.y - 4 + "px";
+  // 常用字
+  const chips = $("itChips");
+  chips.innerHTML = "";
+  for (const w of chipWords("text")) {
+    const b = document.createElement("button");
+    b.type = "button"; b.textContent = w;
+    b.addEventListener("pointerdown", (e) => e.preventDefault());   // 不要讓打字框失去焦點
+    b.addEventListener("click", () => { ta.value += (ta.value && !/[\s\n]$/.test(ta.value) ? " " : "") + w; fitInline(); ta.focus(); });
+    chips.appendChild(b);
+  }
+  box.classList.add("show");
+  fitInline();
+  // 常用字那一排不要超出畫面右邊
+  const bar = box.querySelector(".itBar"), W = $("stageWrap").clientWidth;
+  bar.style.left = "0px";
+  const over = box.offsetLeft + bar.offsetWidth - (W - 8);
+  if (over > 0) bar.style.left = -Math.min(over, box.offsetLeft - 8) + "px";
+  ta.focus();
+  ta.setSelectionRange(ta.value.length, ta.value.length);
+}
+// 打字框跟著字變寬變高
+function fitInline() {
+  const ta = $("itIn");
+  ta.style.width = "40px"; ta.style.height = "auto";
+  ta.style.width = Math.min(window.innerWidth * 0.7, Math.max(120, ta.scrollWidth + 8)) + "px";
+  ta.style.height = ta.scrollHeight + "px";
+}
+function commitInlineText() {
+  const t = inlineTarget;
+  if (!t) return;
+  inlineTarget = null; inlineEditId = null;
+  const txt = $("itIn").value.replace(/\s+$/, "");
+  $("inlineText").classList.remove("show");
+  $("itIn").blur();
+  const existing = t.id ? doc.items.find((i) => i.id === t.id) : null;
+  if (existing) {
+    if (txt === existing.text) { render(); return; }
+    pushUndo();
+    if (!txt) doc.items = doc.items.filter((i) => i !== existing);
+    else existing.text = txt;
+    afterChange();
+  } else if (txt) {
+    pushUndo();
+    doc.items.push({ id: nextId++, type: "text", layer: layerFor("note"), x: t.x, y: t.y, text: txt, size: t.size, color: t.color, rot: 0 });
+    afterChange();
+  } else render();
+}
+$("itIn").addEventListener("input", fitInline);
+$("itIn").addEventListener("keydown", (e) => { if (e.key === "Escape") commitInlineText(); });
+// 收起鍵盤（失去焦點）也算完成；點到常用字或「完成」不算
+$("itIn").addEventListener("blur", () => setTimeout(() => {
+  if (inlineTarget && !$("inlineText").contains(document.activeElement)) commitInlineText();
+}, 150));
+$("itDone").addEventListener("pointerdown", (e) => e.preventDefault());
+$("itDone").addEventListener("click", commitInlineText);
+$("itMore").addEventListener("pointerdown", (e) => e.preventDefault());
+$("itMore").addEventListener("click", () => {
+  // 大視窗（可以編輯常用字）：把目前打的字帶過去
+  const t = inlineTarget, cur = $("itIn").value;
+  inlineTarget = null; inlineEditId = null; $("inlineText").classList.remove("show");
+  openTextDialog(cur, (txt) => { inlineTarget = t; inlineEditId = t.id || null; $("itIn").value = txt || ""; commitInlineText(); }, "輸入文字");
+});
+// 點畫布其他地方＝完成（這一下不會再開一個新的打字框）
+$("stage").addEventListener("pointerdown", (e) => {
+  if (!inlineTarget) return;
+  commitInlineText();
+  e.stopImmediatePropagation(); e.preventDefault();
+}, true);
 
 
 /* ===================== 對話框 ===================== */
@@ -4943,8 +5093,14 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08";
+const APP_VERSION = "2026.11.08.2";
 const CHANGELOG = [
+  ["2026.11.08.2", [
+    "文字：點哪裡就在哪裡直接打字（像 GoodNotes），常用字在打字框下面",
+    "文字可以旋轉：選取後拖上面的圓點，或按「旋轉 90°」",
+    "用尺寸工具拉的標註量過的牆，「?」提醒會自動消失",
+    "牆厚預設改成 10 cm 和 20 cm",
+  ]],
   ["2026.11.08", [
     "自動分圖層：牆壁畫在「牆壁」、符號在「設備」、尺寸和文字在「標註」，要隱藏標註或鎖住牆壁更方便（設定裡可以關）",
     "點「⋯」選單外面關閉時，不會再順便在圖上畫到東西",
