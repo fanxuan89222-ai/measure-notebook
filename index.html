@@ -3633,7 +3633,6 @@ function setMode(mode) {
   const prev = doc.mode || "fine";
   if (mode === prev) return;
   doc.mode = mode;
-  ui.newMode = mode;   // 下一張新圖沿用
   if (mode === "sketch") {
     const l = sketchLayer(true);
     l.locked = false; l.visible = true;
@@ -4652,8 +4651,8 @@ async function createDoc(folder) {
   if (ui.dimSize) d.meta.dimSize = ui.dimSize;
   if (ui.dimStyle) Object.assign(d.meta, ui.dimStyle);
   if (ui.scale) d.scale = { ...ui.scale };
-  d.mode = ui.newMode || "sketch";
-  if (d.mode === "sketch") { d.lastFineLayer = d.activeLayer; d.layers.unshift({ id: "LS", name: "草圖", visible: true, locked: false, sketch: true }); d.activeLayer = "LS"; }
+  // 新圖一律從「精畫」開始，也不先建「草圖」圖層；要畫草圖時點上方「草圖」才會建
+  d.mode = "fine";
   const rec = { id: newId("D"), name: "", folder: folder || null, created: now, updated: now, data: d, view: null, thumb: null, label: "未命名平面圖" };
   await dbPut("docs", rec);
   await openDoc(rec.id);
@@ -4904,8 +4903,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.7";
+const APP_VERSION = "2026.11.07.8";
 const CHANGELOG = [
+  ["2026.11.07.8", [
+    "新的平面圖改成直接從「精畫」開始，不會先多一個「草圖」圖層；要畫草圖時再點上方的「草圖」",
+  ]],
   ["2026.11.07.7", [
     "符號列新增「廚房」：冰箱（REF）、對開冰箱、一字型廚具、水槽、瓦斯爐、抽油煙機、洗碗機（DW）",
     "「收納家電」新增冷氣（AC）和冷氣室外機；洗衣機加上「WM」字樣",
