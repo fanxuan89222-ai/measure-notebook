@@ -1099,7 +1099,7 @@ const SYMBOLS = {
     }
   },
   washer: {
-    // 洗衣機（平面俯視）：方形機身＋後方控制面板＋中間上蓋（圓）
+    // 洗衣機（平面俯視）：方形機身＋後方控制面板＋中間上蓋（圓）＋平面圖慣用的「WM」
     name: "洗衣機", w: 60, h: 60, cat: "storage",
     draw: (m, t) => `
       <rect x="0" y="0" width="60" height="60" rx="3" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
@@ -1107,7 +1107,8 @@ const SYMBOLS = {
       <rect x="8" y="4" width="20" height="4" rx="1" fill="none" stroke="${INK}" stroke-width="${t}"/>
       <circle cx="46" cy="6" r="2.6" fill="none" stroke="${INK}" stroke-width="${t}"/>
       <rect x="6" y="17" width="48" height="38" rx="5" fill="none" stroke="${INK}" stroke-width="${t}"/>
-      <circle cx="30" cy="36" r="13" fill="none" stroke="${INK}" stroke-width="${t}"/>`
+      <circle cx="30" cy="36" r="13" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(30, 36, "WM", 10)}`
   },
   drain: {
     cat: "bath", name: "地排", w: 12, h: 12,
@@ -4903,7 +4904,7 @@ const APP_VERSION = "2026.11.07.7";
 const CHANGELOG = [
   ["2026.11.07.7", [
     "符號列新增「廚房」：冰箱（REF）、對開冰箱、一字型廚具、水槽、瓦斯爐、抽油煙機、洗碗機（DW）",
-    "「收納家電」新增冷氣（AC）和冷氣室外機",
+    "「收納家電」新增冷氣（AC）和冷氣室外機；洗衣機加上「WM」字樣",
   ]],
   ["2026.11.07.6", [
     "橡皮擦改成正方形，擦直角、貼著牆擦比較好擦；大小預設改成兩個（小、大）",
