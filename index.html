@@ -941,6 +941,14 @@ function drainSvg(x, y, s, m, t) {
   return out;
 }
 
+// 符號裡的字（REF、DW、AC）：粗體、置中
+function symText(x, y, txt, size) {
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="${INK}" text-anchor="middle" dominant-baseline="central" letter-spacing="0.5">${txt}</text>`;
+}
+// 爐口：外圈＋內圈
+function burner(cx, cy, m, t) {
+  return `<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${INK}" stroke-width="${t}"/><circle cx="${cx}" cy="${cy}" r="5" fill="none" stroke="${INK}" stroke-width="${m}"/>`;
+}
 // 床：外框＋床頭板＋枕頭（[x, 寬] 的清單）＋棉被上緣＋右下反摺的一角
 function bedSvg(w, pillows, m, t) {
   let out = `<rect x="0" y="0" width="${w}" height="188" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`
@@ -1216,6 +1224,86 @@ const SYMBOLS = {
       for (let i = 0; i < 8; i++) leaves += `<path d="M25 25 Q32 12 25 0 Q18 12 25 25 Z" transform="rotate(${i * 45 + 20} 25 25)" fill="none" stroke="${INK}" stroke-width="${t}"/>`;
       return `<circle cx="25" cy="25" r="13" fill="#fff" stroke="${INK}" stroke-width="${m}"/>` + leaves + `<circle cx="25" cy="25" r="2.5" fill="${INK}"/>`;
     }
+  },
+  /* ===================== 廚房 ===================== */
+  fridge: {
+    // 冰箱：外框＋前面門板線＋平面圖慣用的「REF」字樣
+    cat: "kitchen", name: "冰箱", w: 75, h: 70,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="75" height="70" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <line x1="0" y1="63" x2="75" y2="63" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(37.5, 32, "REF", 15)}`
+  },
+  fridgeDouble: {
+    // 對開冰箱：門板中間分開
+    cat: "kitchen", name: "對開冰箱", w: 90, h: 75,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="90" height="75" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <line x1="0" y1="68" x2="90" y2="68" stroke="${INK}" stroke-width="${t}"/>
+      <line x1="45" y1="68" x2="45" y2="75" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(45, 34, "REF", 16)}`
+  },
+  kitchenCounter: {
+    // 一字型廚具：檯面＋水槽＋兩口爐（靠牆那邊在上）
+    cat: "kitchen", name: "一字型廚具", w: 240, h: 60,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="240" height="60" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="25" y="9" width="80" height="44" rx="5" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <rect x="31" y="15" width="68" height="32" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <circle cx="65" cy="31" r="2.5" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <line x1="65" y1="3" x2="65" y2="12" stroke="${INK}" stroke-width="${m}"/>
+      ${burner(160, 30, m, t)}${burner(205, 30, m, t)}`
+  },
+  sink: {
+    // 水槽：外框＋槽＋排水孔＋水龍頭
+    cat: "kitchen", name: "水槽", w: 80, h: 50,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="80" height="50" rx="4" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <rect x="6" y="10" width="68" height="34" rx="4" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <circle cx="40" cy="28" r="3" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <line x1="40" y1="2" x2="40" y2="14" stroke="${INK}" stroke-width="${m}"/>`
+  },
+  stove: {
+    // 瓦斯爐：兩口爐
+    cat: "kitchen", name: "瓦斯爐", w: 75, h: 50,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="75" height="50" rx="3" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      ${burner(20, 25, m, t)}${burner(55, 25, m, t)}`
+  },
+  hood: {
+    // 抽油煙機：在頭上，平面圖用虛線＋對角線表示
+    cat: "kitchen", name: "抽油煙機", w: 90, h: 50,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="90" height="50" fill="none" stroke="${INK}" stroke-width="${t}" stroke-dasharray="4 3"/>
+      <path d="M0 0 L90 50 M90 0 L0 50" fill="none" stroke="${INK}" stroke-width="${t}" stroke-dasharray="4 3"/>`
+  },
+  dishwasher: {
+    // 洗碗機：平面圖慣用「DW」
+    cat: "kitchen", name: "洗碗機", w: 60, h: 60,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="60" height="60" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <line x1="0" y1="54" x2="60" y2="54" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(30, 27, "DW", 15)}`
+  },
+
+  /* ===================== 冷氣（放在「收納家電」） ===================== */
+  acIndoor: {
+    // 冷氣室內機（壁掛）：靠牆的長方塊＋「AC」，前緣是出風口
+    cat: "storage", name: "冷氣", w: 90, h: 25,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="90" height="25" rx="3" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <line x1="6" y1="20" x2="84" y2="20" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(45, 10.5, "AC", 11)}`
+  },
+  acOutdoor: {
+    // 冷氣室外機：外框＋風扇
+    cat: "storage", name: "冷氣室外機", w: 80, h: 32,
+    draw: (m, t) => `
+      <rect x="0" y="0" width="80" height="32" rx="2" fill="#fff" stroke="${INK}" stroke-width="${m}"/>
+      <circle cx="30" cy="16" r="12" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <circle cx="30" cy="16" r="6.5" fill="none" stroke="${INK}" stroke-width="${t}"/>
+      <path d="M30 4 V28 M18 16 H42" stroke="${INK}" stroke-width="${t}"/>
+      ${symText(62, 16, "AC", 10)}`
   }
 };
 /* ------------------------- 符號庫結束 ------------------------- */
@@ -2924,7 +3012,7 @@ $("folderColorClose").addEventListener("click", () => $("folderColorModal").clas
    上方分類標籤：全部／衛浴／門窗／收納家電／我的符號
    「✎ 排序」：每個符號下面有 ◀ ▶ 移動、👁 隱藏；排序和隱藏會記住（ui.trayOrder、ui.trayHidden）
    符號用代號表示：內建的是 SYMBOLS 的 key，我的符號是 "my:" + id */
-const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["bedroom", "臥室"], ["living", "客廳"], ["storage", "收納家電"], ["mine", "我的符號"]];
+const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["bedroom", "臥室"], ["living", "客廳"], ["kitchen", "廚房"], ["storage", "收納家電"], ["mine", "我的符號"]];
 let trayCat = "all", trayEditing = false;
 function trayKeys() {
   // 全部的代號，照使用者排的順序；新加的符號接在最後
@@ -4811,8 +4899,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.6";
+const APP_VERSION = "2026.11.07.7";
 const CHANGELOG = [
+  ["2026.11.07.7", [
+    "符號列新增「廚房」：冰箱（REF）、對開冰箱、一字型廚具、水槽、瓦斯爐、抽油煙機、洗碗機（DW）",
+    "「收納家電」新增冷氣（AC）和冷氣室外機",
+  ]],
   ["2026.11.07.6", [
     "橡皮擦改成正方形，擦直角、貼著牆擦比較好擦；大小預設改成兩個（小、大）",
   ]],
