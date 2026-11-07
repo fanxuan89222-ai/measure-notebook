@@ -207,7 +207,7 @@
   #toolbar {
     grid-area: main; z-index: 3; align-self: center; justify-self: start; margin: 12px;
     display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 6px;
-    background: rgba(255,255,255,0.97); border-radius: 18px; box-shadow: var(--float);
+    background: #fff; border-radius: 18px; box-shadow: var(--float);
     max-height: calc(100% - 24px); overflow-y: auto; scrollbar-width: none;
   }
   #app.tb-right #toolbar { justify-self: end; }
@@ -330,13 +330,14 @@
   /* ===================== 畫布 ===================== */
   #stageWrap { grid-area: main; position: relative; overflow: hidden; background: #fff; min-height: 0; }
   #stage { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+  #gridLayer { position: absolute; left: 0; top: 0; pointer-events: none; will-change: transform; }
 
   /* 照比例模式的提示（畫布左下角） */
   #scaleBadge { position: absolute; left: 12px; bottom: 14px; background: var(--navy); color: #fff; font-size: 12px; font-weight: 600; padding: 6px 11px; border-radius: 9px; display: none; pointer-events: none; box-shadow: var(--float); }
   #scaleBadge.show { display: block; }
   #app.tb-left #scaleBadge { left: 84px; }
   /* 縮放：右上角一顆膠囊 */
-  #zoomBox { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; padding: 3px; gap: 2px; background: rgba(255,255,255,0.97); border-radius: 14px; box-shadow: var(--float); z-index: 2; }
+  #zoomBox { position: absolute; right: 12px; top: 12px; display: flex; align-items: center; padding: 3px; gap: 2px; background: #fff; border-radius: 14px; box-shadow: var(--float); z-index: 2; }
   #zoomBox button { width: 38px; height: 38px; border: none; background: transparent; border-radius: 11px; display: flex; align-items: center; justify-content: center; padding: 0; color: var(--ink); }
   #zoomBox button:hover { background: var(--ground); }
   #zoomBox #btnZoomFit { width: auto; padding: 0 10px; font-size: 13px; font-weight: 600; color: var(--ink2); }
@@ -347,7 +348,7 @@
   /* 工具的選項列（畫筆粗細、橡皮擦大小、牆厚、尺寸樣式、圖形）：畫布上方中間的膠囊 */
   #eraserBar, #wallBar, #penBar, #shapeBar, #dimBar {
     position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 2; max-width: calc(100% - 200px); overflow-x: auto; scrollbar-width: none;
-    display: none; align-items: center; gap: 8px; padding: 5px 10px; background: rgba(255,255,255,0.97);
+    display: none; align-items: center; gap: 8px; padding: 5px 10px; background: #fff;
     border-radius: 16px; box-shadow: var(--float); font-size: 13px; color: var(--ink2); white-space: nowrap;
   }
   #app.tb-top #eraserBar, #app.tb-top #wallBar, #app.tb-top #penBar, #app.tb-top #shapeBar, #app.tb-top #dimBar { top: 80px; max-width: calc(100% - 24px); }
@@ -395,7 +396,7 @@
   /* 選取物件時的按鈕列：畫布下方中間（上方留給工具的選項列，兩個才不會疊在一起） */
   #selBar {
     position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); max-width: calc(100% - 24px); overflow-x: auto; scrollbar-width: none; z-index: 2;
-    display: none; align-items: center; gap: 2px; padding: 5px; background: rgba(255,255,255,0.97);
+    display: none; align-items: center; gap: 2px; padding: 5px; background: #fff;
     border-radius: 16px; box-shadow: var(--floatHi);
   }
   #app.tb-bottom #selBar { bottom: 82px; }
@@ -567,6 +568,8 @@
 
   <!-- ========== 畫布 ========== -->
   <main id="stageWrap">
+    <!-- 格線（無限模式）：獨立一層，平移時只是滑動，不用重畫 -->
+    <div id="gridLayer"></div>
     <svg id="stage" xmlns="http://www.w3.org/2000/svg">
       <defs>
         <!-- 格線：小格 20 = 10 公分示意，大格 100 = 50 公分示意 -->
@@ -1445,6 +1448,7 @@ function afterChange() {
 function applyView() {
   const v = ui.view;
   viewG.setAttribute("transform", `translate(${v.x},${v.y}) scale(${v.z})`);
+  updateGridBg();
 }
 // 螢幕座標 → 畫布座標
 function toWorld(clientX, clientY) {
@@ -1823,6 +1827,41 @@ function unmeasuredCount() {
   return n;
 }
 const hasAnyDim = () => doc.items.some((it) => (it.type === "dim" && it.v) || (it.dims && Object.values(it.dims).some((d) => d && d.v)));
+
+/* ---------- 拖曳時的快速重畫 ----------
+   拖曳、縮放、旋轉時每動一下都整張重畫會卡（東西多的時候特別明顯）。
+   1. 一個畫面（約 1/60 秒）最多重畫一次（requestAnimationFrame）
+   2. 拖的是符號、圖片、文字、框：只換掉那一個東西，不整張重畫
+      （牆壁會跟旁邊的牆接在一起、線上有標尺寸的，還是整張重畫才正確） */
+let dragQueued = null;
+function dragRender(it) {
+  if (dragQueued) { dragQueued = it; return; }
+  dragQueued = it;
+  requestAnimationFrame(() => {
+    const target = dragQueued; dragQueued = null;
+    if (!target || !fastReplace(target)) render();
+    else renderOverlay();
+  });
+}
+function fastReplace(it) {
+  if (!["sym", "img", "text", "shape"].includes(it.type)) return false;
+  if (it.dims && Object.keys(it.dims).length) return false;
+  const nodes = contentG.querySelectorAll(`[data-id="${it.id}"]`);
+  if (nodes.length !== 1) return false;
+  const tmp = document.createElementNS("http://www.w3.org/2000/svg", "g");
+  tmp.innerHTML = itemSvg(it, false);
+  const fresh = tmp.firstElementChild;
+  // 新舊都要是「最外層就是這個東西」才能直接換，不然整張重畫
+  if (tmp.childElementCount !== 1 || !fresh || fresh.getAttribute("data-id") !== String(it.id) || fresh.tagName !== nodes[0].tagName) return false;
+  nodes[0].replaceWith(fresh);
+  return true;
+}
+let overlayQueued = false;
+function overlaySoon() {
+  if (overlayQueued) return;
+  overlayQueued = true;
+  requestAnimationFrame(() => { overlayQueued = false; renderOverlay(); });
+}
 
 function render() {
   contentG.innerHTML = buildContent(false);
@@ -2358,11 +2397,11 @@ stage.addEventListener("pointermove", (e) => {
       const dx = wx - action.wx, dy = wy - action.wy;
       if (Math.hypot(dx, dy) * ui.view.z > 3) action.moved = true;
       moveItem(action.item, action.start, dx, dy);
-      render();
+      dragRender(action.item);
       break;
     }
-    case "resize": resizeItem(action, wx, wy); render(); break;
-    case "rotate": rotateItem(action, wx, wy); render(); break;
+    case "resize": resizeItem(action, wx, wy); dragRender(action.item); break;
+    case "rotate": rotateItem(action, wx, wy); dragRender(action.item); break;
   }
 });
 
@@ -2539,7 +2578,7 @@ function updatePinch() {
   ui.view.x = cx - r.left - wx * nz;
   ui.view.y = cy - r.top - wy * nz;
   applyView();
-  renderOverlay();
+  overlaySoon();
 }
 
 const round1 = (v) => Math.round(v * 10) / 10;
@@ -3771,16 +3810,63 @@ function pageRect() {
 function applyPaper() {
   const p = doc.paper || { color: "#ffffff", pattern: "grid" };
   const pr = pageRect();
+  const wrap = $("stageWrap");
+  // 畫面上的格線不用 SVG 圖樣（iPad 的 Safari 每次平移、縮放都要整片重畫，很卡），
+  // 改用 CSS 背景畫，跟著畫面位置移動就好，幾乎不花力氣。匯出的圖還是用 SVG 圖樣。
+  $("gridRect").setAttribute("fill", "none");
   if (!pr) {
-    $("stageWrap").style.background = p.color;
-    $("gridRect").setAttribute("fill", pattFill(p));
+    wrap.style.backgroundColor = p.color;
+    wrap.dataset.grid = p.pattern || "grid";
     $("pageG").innerHTML = "";
   } else {
-    $("stageWrap").style.background = DESK;
-    $("gridRect").setAttribute("fill", "none");
-    $("pageG").innerHTML = `<rect x="${pr.x}" y="${pr.y}" width="${pr.w}" height="${pr.h}" fill="${p.color}" filter="url(#pageShadow)"/>`
+    wrap.style.backgroundColor = DESK;
+    wrap.dataset.grid = "none";
+    // 紙的影子：用兩個半透明的方塊疊出來（模糊濾鏡在 iPad 上每次移動都要重算，很卡）
+    $("pageG").innerHTML = `<rect x="${pr.x + 2}" y="${pr.y + 8}" width="${pr.w}" height="${pr.h}" fill="rgba(30,42,68,0.07)"/>`
+      + `<rect x="${pr.x}" y="${pr.y + 3}" width="${pr.w}" height="${pr.h}" fill="rgba(30,42,68,0.06)"/>`
+      + `<rect x="${pr.x}" y="${pr.y}" width="${pr.w}" height="${pr.h}" fill="${p.color}"/>`
       + `<rect x="${pr.x}" y="${pr.y}" width="${pr.w}" height="${pr.h}" fill="${pattFill(p)}"/>`;
   }
+  updateGridBg();
+}
+// 依目前的縮放和位置，更新格線那一層
+// 縮放改變時才重畫格線（換格子大小）；平移只把這一層滑過去（GPU 處理，不重畫）
+let gridKey = "";
+function updateGridBg() {
+  const wrap = $("stageWrap"), layer = $("gridLayer"), g = wrap.dataset.grid, v = ui.view;
+  if (!g || g === "none" || g === "blank") { layer.style.display = "none"; gridKey = ""; return; }
+  layer.style.display = "";
+  const m = 20 * v.z, M = 100 * v.z;   // 小格 10 公分、大格 50 公分（畫布單位 × 縮放）
+  const key = g + "|" + v.z.toFixed(4) + "|" + wrap.clientWidth + "x" + wrap.clientHeight;
+  if (key !== gridKey) {
+    gridKey = key;
+    // 這一層比畫面大一圈（多一個大格），滑動時邊緣才不會露出來
+    layer.style.left = -M + "px"; layer.style.top = -M + "px";
+    layer.style.width = wrap.clientWidth + 2 * M + "px"; layer.style.height = wrap.clientHeight + 2 * M + "px";
+    // 一個大格（50 公分）做成一小張 SVG 圖，再重複鋪滿：瀏覽器只要畫一小張，最省力
+    // 線寬固定 1 個螢幕像素：在 100×100 的小圖裡就是 1/z
+    const w = (1 / v.z).toFixed(3);
+    const fade = Math.min(1, v.z);   // 縮小時格線跟著變淡（跟原本的感覺一樣）
+    let tile;
+    if (g === "dots") {
+      const r = (Math.max(1, 1.2 * v.z) / v.z).toFixed(3);
+      let c = "";
+      for (let i = 0; i <= 100; i += 20) for (let j = 0; j <= 100; j += 20) c += `<circle cx='${i}' cy='${j}' r='${r}'/>`;
+      tile = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><g fill='rgba(60,50,30,0.3)'>${c}</g></svg>`;
+    } else {
+      let minor = "";
+      if (m >= 6) for (const k of [20, 40, 60, 80]) minor += `M${k} 0V100M0 ${k}H100`;   // 縮很小時小格太密，就只畫大格
+      tile = `<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100' shape-rendering='crispEdges'>`
+        + (minor ? `<path d='${minor}' stroke='rgba(60,50,30,${(0.08 * fade).toFixed(3)})' stroke-width='${w}'/>` : "")
+        + `<path d='M0 0H100M0 0V100' stroke='rgba(60,50,30,${(0.15 * Math.max(0.5, fade)).toFixed(3)})' stroke-width='${(2 / v.z).toFixed(3)}'/></svg>`;
+    }
+    layer.style.backgroundImage = `url("data:image/svg+xml,${encodeURIComponent(tile)}")`;
+    layer.style.backgroundSize = `${M}px ${M}px`;
+    layer.style.backgroundPosition = "0 0";
+  }
+  // 格線要對齊畫布原點：位移取大格的餘數
+  const tx = ((v.x % M) + M) % M, ty = ((v.y % M) + M) % M;
+  layer.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
 }
 // 換紙張大小／方向：紙放在原本的紙（或畫好的東西、或畫面）中間
 function setPageSize(size, orient) {
@@ -4641,8 +4727,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.3";
+const APP_VERSION = "2026.11.07.4";
 const CHANGELOG = [
+  ["2026.11.07.4", [
+    "變順了：平移、縮放畫面，和拖曳符號、文字時比較不會卡",
+  ]],
   ["2026.11.07.3", [
     "照比例模式：畫完一條直線，旁邊會跳出長度框，打 245 按確定，線就變成剛好 245 公分（不理它就維持手畫的長度）",
   ]],
