@@ -103,6 +103,8 @@
   .card .openBadge { position: absolute; left: 10px; top: 10px; background: var(--sel); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; }
   .libEmpty { color: var(--ink2); padding: 72px 0; text-align: center; font-size: 15px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .libEmpty > svg { width: 120px; height: 90px; }
+  .libEmpty .emptyImg { width: 180px; height: auto; cursor: pointer; transition: transform .18s cubic-bezier(.2,.8,.2,1); }
+  .libEmpty .emptyImg:active { transform: scale(0.96); }
   .libFoot { margin: 64px auto 0; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2);
     display: flex; align-items: center; justify-content: center; gap: 18px; }
   .libFoot .qr { width: 120px; height: 120px; border-radius: 12px; background: #fff; padding: 6px; box-shadow: var(--float); }
@@ -4710,8 +4712,10 @@ async function renderLibrary() {
   if (!subFolders.length && !here.length) {
     if (q) grid.innerHTML = `<div class="libEmpty" style="grid-column:1/-1"><div>找不到「${escapeXml(q)}」</div><small>試試只打業主的姓，或地址的一部分</small></div>`;
     else {
-      grid.innerHTML = `<div class="libEmpty" style="grid-column:1/-1">${ICON.emptyDoc}<div>${libFolder ? "這個資料夾是空的" : "還沒有平面圖"}</div><button class="btn primary" id="libEmptyNew">新平面圖</button></div>`;
+      // 插圖點了也可以開新圖
+      grid.innerHTML = `<div class="libEmpty" style="grid-column:1/-1"><img class="emptyImg" id="libEmptyImg" src="empty-plan.png" alt="新增平面圖" width="180" height="170"><div>${libFolder ? "這個資料夾是空的" : "還沒有平面圖"}</div><button class="btn primary" id="libEmptyNew">新平面圖</button></div>`;
       $("libEmptyNew").addEventListener("click", () => createDoc(libFolder));
+      $("libEmptyImg").addEventListener("click", () => createDoc(libFolder));
     }
   }
 }
