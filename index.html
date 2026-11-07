@@ -112,6 +112,14 @@
   .libSearch input::placeholder { color: #5f6880; }
   .card .path { font-size: 12px; color: var(--sel); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .card mark { background: #fde7b0; color: inherit; border-radius: 3px; padding: 0 1px; }
+  .newsList { max-height: 56vh; overflow-y: auto; }
+  .newsList h5 { margin: 14px 0 6px; font-size: 13px; color: var(--ink2); font-weight: 700; font-variant-numeric: tabular-nums; }
+  .newsList h5:first-child { margin-top: 0; }
+  .newsList ul { margin: 0; padding: 12px 14px 12px 32px; background: var(--ground); border-radius: 14px; }
+  .newsList li { font-size: 15px; line-height: 1.6; }
+  #updateBar { position: fixed; left: 50%; top: calc(var(--tabH) + 10px); transform: translateX(-50%); z-index: 75; display: none;
+    background: var(--sel); color: #fff; border: none; border-radius: 14px; padding: 11px 18px; font-size: 15px; font-weight: 600; box-shadow: var(--floatHi); }
+  #updateBar.show { display: block; }
   .folderColors { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
   .folderColors button { border: none; background: transparent; padding: 8px 4px 6px; border-radius: 14px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 13px; color: var(--ink2); }
   .folderColors button:hover { background: var(--ground); }
@@ -761,6 +769,7 @@
       <h4>關於</h4>
       <div class="setRow"><span>丈量手帳<small>開發者 Evan｜有問題、壞掉或想加功能都可以找我</small></span>
         <button class="lineCopy" data-line="32466038">LINE ID：32466038<span>複製</span></button></div>
+      <div class="setRow" style="margin:10px 0 0"><span>版本 <b id="verText"></b></span><button class="btn" id="btnNews">看更新說明</button></div>
     </section>
 
     <div class="row"><button class="btn primary" id="settingsClose">完成</button></div>
@@ -807,6 +816,17 @@
     <div class="row"><button class="btn" id="sheetClose">取消</button></div>
   </div>
 </div>
+
+<!-- 更新說明（有新版本時自動跳出；設定→關於 也能打開） -->
+<div class="modal" id="newsModal">
+  <div class="dialog" style="width:min(460px,100%)">
+    <h3 id="newsTitle">丈量手帳更新了</h3>
+    <div id="newsList" class="newsList"></div>
+    <div class="row"><button class="btn primary" id="newsOk">知道了</button></div>
+  </div>
+</div>
+<!-- 開著 App 時發現網站有新版本 -->
+<button id="updateBar">有新版本，點這裡更新</button>
 
 <!-- 資料夾顏色 -->
 <div class="modal" id="folderColorModal">
@@ -4408,8 +4428,69 @@ async function init() {
   if (tabs.length && !ses.inLibrary) loadTab(Math.min(Math.max(ses.active ?? 0, 0), tabs.length - 1));
   else await showLibrary();
   toast(migrated ? "你之前畫的圖已經搬進文件庫了，點一下就能繼續畫" : "畫完先別放開筆，停住 0.5 秒就會變成直線或矩形");
+  checkWhatsNew(!prefs && !old);   // 有新版本就跳出更新說明
 }
 window.addEventListener("resize", () => renderOverlay());
+
+/* ===================== 版本與更新說明 =====================
+   ★ 每次更新給同事用：
+     1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
+     2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
+   同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
+const APP_VERSION = "2026.11.07";
+const CHANGELOG = [
+  ["2026.11.07", [
+    "新增「草圖／精畫」模式：現場隨手畫草圖，回辦公室切到精畫，草圖會變成淡淡的底稿讓你描",
+    "新版面：工具列浮在紙上，畫圖空間更大；符號列可以收起來",
+    "設定裡可以換主題顏色（8 種）",
+    "紙張大小可以選：無限、A4、A3（直式／橫式）",
+    "文件庫可以搜尋業主、地址；資料夾可以換顏色",
+    "匯出預設不印標題，需要的話到設定打開",
+  ]],
+];
+const SEEN_KEY = "floorplan-seen-version";
+function showNews(sinceVersion) {
+  // sinceVersion：只列出比它新的；沒給就全部列出
+  const items = CHANGELOG.filter(([v]) => !sinceVersion || v > sinceVersion);
+  if (!items.length) return;
+  $("newsTitle").textContent = sinceVersion === undefined ? "更新說明" : "丈量手帳更新了";
+  $("newsList").innerHTML = items.map(([v, list]) => `<h5>${v}</h5><ul>${list.map((t) => `<li>${escapeXml(t)}</li>`).join("")}</ul>`).join("");
+  $("newsModal").classList.add("show");
+}
+$("newsOk").addEventListener("click", () => {
+  $("newsModal").classList.remove("show");
+  try { localStorage.setItem(SEEN_KEY, APP_VERSION); } catch (e) { /* 存不了就下次再提醒 */ }
+});
+$("btnNews").addEventListener("click", () => showNews(undefined));
+$("verText").textContent = APP_VERSION;
+function checkWhatsNew(firstTime) {
+  let seen = null;
+  try { seen = localStorage.getItem(SEEN_KEY); } catch (e) { /* 讀不到就當沒看過 */ }
+  if (firstTime) { try { localStorage.setItem(SEEN_KEY, APP_VERSION); } catch (e) {} return; }   // 新同事不用看更新說明
+  if (seen === APP_VERSION) return;
+  if (seen) showNews(seen);   // 列出上次看過之後的所有更新
+  else showNews(CHANGELOG.length > 1 ? CHANGELOG[1][0] : "");   // 用過舊版、但沒有版本紀錄的人：只給看最新這一筆
+}
+// 開著 App 的時候（iPad 主畫面的 App 常常一直開著），回到 App 時偷偷看一下網站是不是有新版本
+let lastUpdateCheck = 0;
+async function checkForUpdate() {
+  if (location.protocol !== "https:" && location.protocol !== "http:") return;
+  if (Date.now() - lastUpdateCheck < 10 * 60 * 1000) return;   // 最多 10 分鐘看一次
+  lastUpdateCheck = Date.now();
+  try {
+    const res = await fetch(location.pathname + "?v=" + Date.now(), { cache: "no-store" });
+    if (!res.ok) return;
+    const m = (await res.text()).match(/const APP_VERSION = "([^"]+)"/);
+    if (m && m[1] !== APP_VERSION) $("updateBar").classList.add("show");
+  } catch (e) { /* 沒網路就算了 */ }
+}
+$("updateBar").addEventListener("click", async () => {
+  // 先存檔再重新整理
+  backupNow(); await flushDocSave(false);
+  location.reload();
+});
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible") checkForUpdate(); });
+
 // 防止 iOS Safari 的手勢放大整個網頁
 document.addEventListener("gesturestart", (e) => e.preventDefault());
 // 切到別的 App 或關掉前，先存檔
