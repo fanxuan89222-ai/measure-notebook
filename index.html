@@ -103,7 +103,13 @@
   .card .openBadge { position: absolute; left: 10px; top: 10px; background: var(--sel); color: #fff; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 8px; }
   .libEmpty { color: var(--ink2); padding: 72px 0; text-align: center; font-size: 15px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
   .libEmpty > svg { width: 120px; height: 90px; }
-  .libFoot { margin-top: 56px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2); text-align: center; }
+  .libFoot { margin: 64px auto 0; padding-top: 22px; border-top: 1px solid var(--line); font-size: 13px; color: var(--ink2);
+    display: flex; align-items: center; justify-content: center; gap: 18px; }
+  .libFoot .qr { width: 120px; height: 120px; border-radius: 12px; background: #fff; padding: 6px; box-shadow: var(--float); }
+  .libFoot .contact { display: flex; flex-direction: column; gap: 4px; line-height: 1.5; }
+  .libFoot .contact b { color: var(--ink); font-size: 14px; }
+  .lineAdd { margin-left: 4px; font-size: 12px; font-weight: 600; color: #fff; background: #06c755; border-radius: 6px; padding: 2px 8px; text-decoration: none; }
+  a.mail { color: var(--sel); text-decoration: none; font-weight: 600; }
   .lineCopy { border: none; background: transparent; color: var(--ink); font-weight: 600; font-size: 13px; padding: 4px 6px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
   .lineCopy span { font-weight: 400; font-size: 12px; color: var(--sel); background: var(--selSoft); border-radius: 6px; padding: 2px 6px; }
   .libSearch { display: flex; align-items: center; gap: 8px; height: 40px; padding: 0 12px; background: #fff; border-radius: 12px; box-shadow: inset 0 0 0 1px var(--line); color: var(--ink2); width: min(320px, 100%); }
@@ -503,7 +509,15 @@
   </div>
   <div class="libGrid" id="libGrid"></div>
   <!-- 開發者聯絡方式：之後換工作也聯絡得到（改這裡就好） -->
-  <footer class="libFoot">丈量手帳・開發者 Evan　有問題請聯繫　LINE ID：<button class="lineCopy" data-line="32466038">32466038<span>複製</span></button></footer>
+  <footer class="libFoot">
+    <img class="qr" src="line-qr.png" alt="Evan 的 LINE QR Code" width="120" height="120">
+    <div class="contact">
+      <b>丈量手帳・開發者 Evan</b>
+      <span>有問題請聯繫</span>
+      <span>LINE ID：<button class="lineCopy" data-line="32466038">32466038<span>複製</span></button><a class="lineAdd" href="https://line.me/ti/p/L8XkaFkZ-W" target="_blank" rel="noopener">加好友</a></span>
+      <span>Email：<a class="mail" href="mailto:fanxuan89222@gmail.com">fanxuan89222@gmail.com</a></span>
+    </div>
+  </footer>
 </section>
 
 <div id="app">
@@ -794,6 +808,7 @@
       <h4>關於</h4>
       <div class="setRow"><span>丈量手帳<small>開發者 Evan｜有問題、壞掉或想加功能都可以找我</small></span>
         <button class="lineCopy" data-line="32466038">LINE ID：32466038<span>複製</span></button></div>
+      <div class="setRow" style="margin:6px 0 0"><span>Email</span><a class="mail" href="mailto:fanxuan89222@gmail.com" style="font-size:13px">fanxuan89222@gmail.com</a></div>
       <div class="setRow" style="margin:10px 0 0"><span>版本 <b id="verText"></b></span><button class="btn" id="btnNews">看更新說明</button></div>
     </section>
 

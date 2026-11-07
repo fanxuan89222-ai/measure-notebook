@@ -21,7 +21,7 @@
 刪除 Safari 網站資料或換 iPad，圖就不見了，重要的圖請記得匯出。
 
 ## 聯絡開發者
-Evan　LINE ID：32466038
+Evan　LINE ID：32466038　Email：fanxuan89222@gmail.com
 
 ## 給維護的人
 整個 App 就是一個 `index.html`（HTML＋CSS＋JavaScript），程式裡有繁體中文註解。
