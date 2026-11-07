@@ -432,14 +432,17 @@
   #trayTabs button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(30,42,68,0.14); }
   #trayTabs button svg { width: 16px; height: 16px; }
   #trayTabs .sp { flex: 1; }
-  #trayItems { display: flex; gap: 8px; padding: 8px 12px 10px; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #c3cad8 transparent; }
+  #trayItems { display: flex; gap: 8px; padding: 8px 12px 10px; overflow-x: auto; overscroll-behavior-x: contain; scroll-snap-type: x proximity;
+    scrollbar-width: thin; scrollbar-color: #c3cad8 transparent; -webkit-overflow-scrolling: touch; }
+  #trayItems .sym { scroll-snap-align: start; }
   #tray.collapsed #trayItems { display: none; }
   #tray.collapsed #trayTabs { padding-bottom: 8px; }
   #trayFold svg { transition: transform .2s; }
   #tray.collapsed #trayFold svg { transform: rotate(180deg); }
   .sym {
     flex: 0 0 auto; width: 86px; height: 86px; display: flex; flex-direction: column; align-items: center;
-    justify-content: center; gap: 4px; padding: 6px; font-size: 12px; color: var(--ink); border-radius: 14px; touch-action: none;
+    justify-content: center; gap: 4px; padding: 6px; font-size: 12px; color: var(--ink); border-radius: 14px;
+    touch-action: pan-x;   /* 手指在符號上左右滑＝捲動符號列（點一下才是放進圖裡） */
     border: none; background: #fff; box-shadow: 0 1px 2px rgba(30,42,68,0.08), 0 2px 8px rgba(30,42,68,0.06);
   }
   .sym:hover { box-shadow: 0 1px 2px rgba(30,42,68,0.1), 0 6px 16px rgba(30,42,68,0.12); }
@@ -453,7 +456,7 @@
     font-size: 14px; line-height: 22px; color: var(--danger); text-align: center;
   }
   /* 排序模式 */
-  #tray.editing .sym { height: 112px; justify-content: flex-start; cursor: grab; }
+  #tray.editing .sym { height: 112px; justify-content: flex-start; cursor: grab; touch-action: none; }   /* 排序模式：拖曳換位置，不捲動 */
   #tray .sym.hiddenSym { opacity: 0.4; }
   .dragging { z-index: 5; position: relative; box-shadow: var(--floatHi) !important; opacity: 0.95; }
   .symCtl { display: flex; gap: 3px; margin-top: 2px; }
@@ -3025,6 +3028,10 @@ function trayKeys() {
   return order;
 }
 const keyCat = (k) => (k.startsWith("my:") ? "mine" : SYMBOLS[k].cat || "bath");
+// 電腦用滑鼠滾輪時，上下滾＝符號列左右捲
+$("trayItems").addEventListener("wheel", (e) => {
+  if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) { $("trayItems").scrollLeft += e.deltaY; e.preventDefault(); }
+}, { passive: false });
 function setTrayCollapsed(v) {
   ui.trayCollapsed = v;
   savePrefs();
@@ -4903,8 +4910,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.07.8";
+const APP_VERSION = "2026.11.07.9";
 const CHANGELOG = [
+  ["2026.11.07.9", [
+    "下方符號列可以用手指左右滑動，符號再多也找得到",
+  ]],
   ["2026.11.07.8", [
     "新的平面圖改成直接從「精畫」開始，不會先多一個「草圖」圖層；要畫草圖時再點上方的「草圖」",
   ]],
