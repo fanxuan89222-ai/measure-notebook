@@ -592,11 +592,17 @@
   #calcExpr { min-height: 20px; font-size: 15px; color: var(--ink2); word-break: break-all; }
   #calcOut { font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #calcOut.err { color: var(--glaze); font-size: 18px; line-height: 41px; }
-  #calcHist { display: flex; flex-direction: column; max-height: 92px; overflow-y: auto; border-radius: 12px; }
-  #calcHist:empty { display: none; }
-  #calcHist button { display: flex; justify-content: space-between; gap: 10px; border: none; background: none; padding: 5px 8px; font-size: 13px; color: var(--ink2); border-radius: 8px; text-align: left; font-variant-numeric: tabular-nums; }
-  #calcHist button b { color: var(--ink); font-weight: 600; white-space: nowrap; }
-  #calcHist button:active { background: var(--ground); }
+  #calcHistWrap { display: none; flex-direction: column; gap: 2px; }
+  #calcHistWrap.has { display: flex; }
+  .calcHistHead { display: flex; align-items: center; justify-content: space-between; padding: 0 2px 0 8px; font-size: 12px; color: var(--ink2); }
+  .calcHistHead button { border: none; background: none; color: var(--glaze); font-size: 13px; padding: 4px 6px; }
+  #calcHist { display: flex; flex-direction: column; max-height: 96px; overflow-y: auto; }
+  #calcHist .hRow { display: flex; align-items: center; flex: 0 0 32px; }
+  #calcHist .hUse { flex: 1; min-width: 0; display: flex; justify-content: space-between; gap: 10px; border: none; background: none; height: 32px; padding: 0 8px; font-size: 13px; color: var(--ink2); border-radius: 8px; text-align: left; font-variant-numeric: tabular-nums; }
+  #calcHist .hUse b { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  #calcHist .hUse:active { background: var(--ground); }
+  #calcHist .hDel { flex: 0 0 32px; height: 32px; display: flex; align-items: center; justify-content: center; line-height: 1; border: none; background: none; color: #a7aec0; font-size: 17px; padding: 0; border-radius: 8px; }
+  #calcHist .hDel:active { background: var(--ground); color: var(--glaze); }
   .calcConv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
   .calcConv button { height: 34px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 12.5px; color: var(--ink); padding: 0; white-space: nowrap; }
   .calcConv button:active { background: var(--ground); }
@@ -1065,7 +1071,7 @@
     <button class="dlgX" id="calcClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
   </div>
   <div class="calcScreen"><div id="calcExpr"></div><div id="calcOut">0</div></div>
-  <div id="calcHist"></div>
+  <div id="calcHistWrap"><div class="calcHistHead"><span>計算紀錄</span><button id="calcHistClr">全部清除</button></div><div id="calcHist"></div></div>
   <div class="calcConv">
     <button data-cv="tc">台尺→cm</button><button data-cv="ct">cm→台尺</button><button data-cv="pm">坪→m²</button><button data-cv="mp">m²→坪</button>
   </div>
@@ -5440,15 +5446,19 @@ function calcRender(errMsg) {
   else { const r = evalMath(calc.expr); out.textContent = r !== null ? fmtCalc(r) : (calc.expr.match(/[\d.]+$/) || ["…"])[0]; }
   // 上面那行：打算式時顯示整串算式；按了＝之後顯示「算式 =」
   $("calcExpr").textContent = calc.justEq ? calc.lastExpr ? calc.lastExpr + " =" : "" : hasMathOp(calc.expr) ? calc.expr : "";
-  $("calcHist").innerHTML = calc.hist.map((h, i) => `<button data-h="${i}"><span>${escapeXml(h.e)}</span><b>${escapeXml(h.r)}</b></button>`).join("");
+  $("calcHist").innerHTML = calc.hist.map((h, i) => `<div class="hRow"><button class="hUse" data-h="${i}"><span>${escapeXml(h.e)}</span><b>${escapeXml(h.r)}</b></button><button class="hDel" data-del="${i}" aria-label="刪除這筆">×</button></div>`).join("");
+  $("calcHistWrap").classList.toggle("has", calc.hist.length > 0);
   const alive = calcTargetAlive();
   $("calcUse").textContent = alive ? `帶入${calc.targetName ? "「" + calc.targetName + "」" : ""}` : "複製結果";
 }
+function calcSaveHist() { try { localStorage.setItem(CALC_HIST_KEY, JSON.stringify(calc.hist)); } catch (err) { /* 存不了就算了 */ } }
 function calcPushHist(e, r) {
   calc.hist.unshift({ e, r });
   calc.hist = calc.hist.slice(0, 12);
-  try { localStorage.setItem(CALC_HIST_KEY, JSON.stringify(calc.hist)); } catch (err) { /* 存不了就算了 */ }
+  calcSaveHist();
 }
+// 舊版沒打數字就按換算，會留下「0 坪 = 0 m²」這種紀錄：清掉
+calc.hist = calc.hist.filter((h) => !/^0 /.test(String(h.e)));
 function calcKey(k) {
   let e = calc.expr;
   const last = e.slice(-1);
@@ -5482,6 +5492,7 @@ function calcKey(k) {
 function calcConvert(kind) {
   const v = calcValue();
   if (v === null) { calcRender("算式還沒打完"); return; }
+  if (!v) { calcRender("先打數字再換算"); return; }
   const n = v;
   const T = { tc: [30.3, "台尺", "cm"], ct: [1 / 30.3, "cm", "台尺"], pm: [3.30579, "坪", "m²"], mp: [0.3025, "m²", "坪"] }[kind];
   const r = n * T[0], rs = fmtCalc(r);
@@ -5530,8 +5541,11 @@ $("btnCalc").addEventListener("click", () => { $("calc").classList.contains("sho
 $("calcClose").addEventListener("click", closeCalc);
 $("calcKeys").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) calcKey(b.dataset.k); });
 document.querySelectorAll(".calcConv button").forEach((b) => b.addEventListener("click", () => calcConvert(b.dataset.cv)));
+$("calcHistClr").addEventListener("click", () => { calc.hist = []; calcSaveHist(); calcRender(); });
 $("calcHist").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b) return;
+  const d = e.target.closest(".hDel");
+  if (d) { calc.hist.splice(+d.dataset.del, 1); calcSaveHist(); calcRender(); return; }
+  const b = e.target.closest(".hUse"); if (!b) return;
   const h = calc.hist[+b.dataset.h]; if (!h) return;
   calc.expr = String(parseFloat(h.r)); calc.lastExpr = h.e; calc.justEq = true; calcRender();
 });
@@ -5715,8 +5729,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08.4";
+const APP_VERSION = "2026.11.08.5";
 const CHANGELOG = [
+  ["2026.11.08.5", [
+    "計算機的紀錄可以刪除：每筆右邊有 ×，上面有「全部清除」",
+    "沒打數字就按換算不會再留下「0 坪」的紀錄",
+  ]],
   ["2026.11.08.4", [
     "新增計算機：上方工具列的計算機按鈕，或尺寸框旁邊的小按鈕。有自己的數字鍵，算好按「帶入」就填進尺寸",
     "計算機可以換算 台尺↔公分、坪↔平方公尺，算過的會留紀錄；按住上面那條可以拖到旁邊",
