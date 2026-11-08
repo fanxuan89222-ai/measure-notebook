@@ -511,7 +511,16 @@
   #tourSpot.none { left: 50% !important; top: 40% !important; width: 0 !important; height: 0 !important; box-shadow: 0 0 0 9999px rgba(18,24,40,0.58); }
   #tourCard { position: fixed; width: min(400px, calc(100vw - 24px)); background: #fff; border-radius: 20px; box-shadow: var(--floatHi); overflow: hidden;
     transition: left .3s cubic-bezier(.2,.9,.25,1), top .3s cubic-bezier(.2,.9,.25,1); }
+  #tourCard.hasVideo { width: min(500px, calc(100vw - 24px)); }
   .tourMedia:empty { display: none; }
+  /* 示範短片放大看 */
+  #vidBox { position: fixed; inset: 0; z-index: 120; background: rgba(18,24,40,0.72); display: none; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 20px; }
+  #vidBox.show { display: flex; animation: fadeIn .16s ease-out; }
+  #vidBox video { width: min(860px, 100%, calc((100vh - 120px) * 4 / 3)); height: auto; border-radius: 16px; background: #fff; box-shadow: var(--floatHi); }
+  #vidBox b { color: #fff; font-size: 17px; }
+  #vidBox span { color: rgba(255,255,255,.8); font-size: 13px; }
+  .helpItem .zoomHint { position: relative; }
+  .helpItem .zoomHint::after { content: "點一下放大"; position: absolute; right: 8px; bottom: 8px; background: rgba(30,42,68,.72); color: #fff; font-size: 12px; padding: 3px 8px; border-radius: 8px; pointer-events: none; }
   .tourMedia video { display: block; width: 100%; height: auto; background: var(--ground); border-bottom: 1px solid var(--line); }
   .tourMedia .gestures { padding: 14px 14px 0; }
   .tourBody { padding: 14px 18px 4px; }
@@ -548,14 +557,64 @@
   .gest .drag .f { animation: gDrag 2s ease-in-out infinite; }
   @keyframes gDrag { 0%, 100% { transform: translateX(-14px); } 50% { transform: translateX(14px); } }
 
-  /* 算式按鈕列：在鍵盤正上方 */
-  #mathKeys { position: fixed; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 90; display: none; align-items: center; gap: 4px;
-    padding: 6px; background: #fff; border-radius: 16px; box-shadow: var(--floatHi); max-width: calc(100vw - 16px); }
-  #mathKeys.show { display: flex; }
-  #mathKeys button { width: 46px; height: 42px; border: none; background: var(--ground); border-radius: 11px; font-size: 20px; font-weight: 600; color: var(--ink); padding: 0; }
-  #mathKeys button.eq { background: var(--sel); color: #fff; }
-  #mathRes { min-width: 90px; padding: 0 10px; font-size: 16px; font-weight: 600; color: var(--sel); font-variant-numeric: tabular-nums; white-space: nowrap; }
-  #mathRes:empty::before { content: "可以打算式"; color: var(--ink2); font-weight: 400; font-size: 13px; }
+  /* ===================== 精畫模式的「草圖底稿」小膠囊 =====================
+     草圖在精畫模式會變淡、鎖住；這顆膠囊告訴大家「那些淡淡的線是什麼」，點開可以回草圖改、隱藏、或直接轉成正式線 */
+  #sketchChip { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; display: none; align-items: center; gap: 7px;
+    height: 38px; padding: 0 14px 0 12px; border: none; border-radius: 19px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 600;
+    box-shadow: var(--float); white-space: nowrap; }
+  #sketchChip.show { display: flex; }
+  #sketchChip .sw { width: 18px; height: 18px; border-radius: 5px; background: repeating-linear-gradient(135deg, rgba(194,86,47,.45) 0 2px, transparent 2px 5px); border: 1.5px solid rgba(194,86,47,.55); }
+  #sketchChip small { font-weight: 400; color: var(--ink2); font-size: 12.5px; }
+  #sketchChip svg { width: 14px; height: 14px; color: var(--ink2); }
+  #sketchChip.nudge { animation: chipNudge .9s ease-in-out 2; }
+  @keyframes chipNudge { 0%, 100% { transform: translateX(-50%); box-shadow: var(--float); } 30% { transform: translateX(-50%) translateY(-4px); box-shadow: 0 0 0 4px rgba(194,86,47,.25), var(--float); } }
+  #sketchPop { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); z-index: 5; width: min(380px, calc(100% - 24px)); display: none;
+    background: #fff; border-radius: 20px; padding: 16px 16px 14px; box-shadow: var(--floatHi); }
+  #sketchPop.show { display: block; animation: popIn .2s cubic-bezier(.2,.9,.25,1); }
+  #sketchPop h4 { margin: 0 34px 6px 0; font-size: 16px; }
+  #sketchPop p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; color: var(--ink2); }
+  #sketchPop p b { color: var(--ink); }
+  #sketchPop .dlgX { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; }
+  #sketchPop .acts { display: flex; flex-direction: column; gap: 6px; }
+  #sketchPop .acts button { display: flex; align-items: center; gap: 10px; height: auto; min-height: 50px; padding: 8px 12px; text-align: left; border: 1px solid var(--line); background: #fff; border-radius: 13px; font-size: 15px; font-weight: 600; color: var(--ink); }
+  #sketchPop .acts button:active { background: var(--ground); }
+  #sketchPop .acts button span { display: flex; flex-direction: column; }
+  #sketchPop .acts button small { font-weight: 400; font-size: 12.5px; color: var(--ink2); margin-top: 1px; }
+  #sketchPop .acts svg { width: 22px; height: 22px; flex: 0 0 auto; color: var(--sel); }
+  /* ===================== 計算機（浮動面板，可以拖） ===================== */
+  #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
+    background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
+  #calc.show { display: flex; animation: popIn .2s cubic-bezier(.2,.9,.25,1); }
+  .calcHead { display: flex; align-items: center; gap: 8px; height: 46px; margin: 0 -4px 0 2px; cursor: grab; touch-action: none; }
+  .calcHead b { font-size: 15px; flex: 1; }
+  .calcHead .grip { width: 22px; height: 14px; color: #a7aec0; }
+  .calcScreen { background: var(--ground); border-radius: 14px; padding: 8px 12px 6px; text-align: right; font-variant-numeric: tabular-nums; }
+  #calcExpr { min-height: 20px; font-size: 15px; color: var(--ink2); word-break: break-all; }
+  #calcOut { font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #calcOut.err { color: var(--glaze); font-size: 18px; line-height: 41px; }
+  #calcHist { display: flex; flex-direction: column; max-height: 92px; overflow-y: auto; border-radius: 12px; }
+  #calcHist:empty { display: none; }
+  #calcHist button { display: flex; justify-content: space-between; gap: 10px; border: none; background: none; padding: 5px 8px; font-size: 13px; color: var(--ink2); border-radius: 8px; text-align: left; font-variant-numeric: tabular-nums; }
+  #calcHist button b { color: var(--ink); font-weight: 600; white-space: nowrap; }
+  #calcHist button:active { background: var(--ground); }
+  .calcConv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
+  .calcConv button { height: 34px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 12.5px; color: var(--ink); padding: 0; white-space: nowrap; }
+  .calcConv button:active { background: var(--ground); }
+  .calcKeys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .calcKeys button { height: 52px; border: none; border-radius: 13px; background: var(--ground); font-size: 23px; font-weight: 600; color: var(--ink); padding: 0; touch-action: manipulation; }
+  .calcKeys button:active { filter: brightness(.92); transform: scale(.97); }
+  .calcKeys .op { background: var(--selSoft); color: var(--sel); }
+  .calcKeys .clr { color: var(--glaze); font-size: 19px; }
+  .calcKeys .eq { background: var(--sel); color: #fff; }
+  #calcUse { height: 46px; font-size: 16px; width: 100%; }
+  /* 尺寸框旁邊的計算機小按鈕 */
+  .calcBtn { width: 38px; height: 38px; flex: 0 0 auto; border: none; border-radius: 10px; background: var(--ground); color: var(--ink2); padding: 0; display: flex; align-items: center; justify-content: center; }
+  .calcBtn:active { background: var(--ground2); }
+  .calcBtn svg { width: 20px; height: 20px; }
+  /* 從尺寸對話框打開計算機：對話框靠左，計算機放右邊，不會擋住 */
+  .modal.calcSide { justify-content: flex-start; }
+  .mathInput.calcFilled { animation: calcFill .6s ease-out; }
+  @keyframes calcFill { 0% { background: var(--selSoft); box-shadow: 0 0 0 4px var(--selSoft); } }
   #libToast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 6px); z-index: 80; background: var(--navy); color: #fff; padding: 10px 18px; border-radius: 14px; font-size: 14px; box-shadow: var(--floatHi); opacity: 0; transition: opacity .2s, transform .25s; pointer-events: none; white-space: nowrap; }
   #libToast.show { opacity: 1; transform: translate(-50%, 0); }
   #app.tb-bottom #toast { bottom: 146px; }
@@ -620,6 +679,7 @@
     </div>
     <span class="tbSep"></span>
     <button class="btn ghost layerBtn" id="btnLayers" title="圖層"></button>
+    <button class="btn ghost icon" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><circle cx="9" cy="12" r=".7" fill="currentColor"/><circle cx="12" cy="12" r=".7" fill="currentColor"/><circle cx="15" cy="12" r=".7" fill="currentColor"/><circle cx="9" cy="16" r=".7" fill="currentColor"/><circle cx="12" cy="16" r=".7" fill="currentColor"/><circle cx="15" cy="16" r=".7" fill="currentColor"/></svg></button>
     <button class="btn ghost" id="btnSettings" title="設定"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">設定</span></button>
     <button class="btn ghost icon" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
     <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
@@ -703,6 +763,18 @@
       </g>
     </svg>
     <div id="scaleBadge">照比例・1 小格＝10cm</div>
+    <!-- 精畫模式：草圖底稿的說明膠囊 -->
+    <button id="sketchChip" type="button"><span class="sw"></span>草圖底稿<small id="sketchChipState">淡淡顯示</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+    <div id="sketchPop" role="dialog" aria-label="草圖底稿">
+      <button class="dlgX" id="sketchPopX" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      <h4>淡淡的線是「草圖底稿」</h4>
+      <p>切到<b>精畫</b>後，現場畫的草圖會變淡、鎖住，讓你照著描牆、放符號。<b>匯出圖片時不會印出來</b>。</p>
+      <div class="acts">
+        <button id="skBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg><span>回草圖修改<small>切回草圖模式，線會變回清楚的、可以擦</small></span></button>
+        <button id="skHide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg><span id="skHideTxt">先藏起來<small>描好了，暫時不看草圖</small></span></button>
+        <button id="skConvert"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>草圖直接當正式圖<small>不描了：草圖變回清楚的線，匯出也會印</small></span></button>
+      </div>
+    </div>
     <div id="zoomBox">
       <button id="btnZoomOut" title="縮小"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/></svg></button>
       <button id="btnZoomFit" title="把整張圖移到畫面中間">置中</button>
@@ -785,6 +857,7 @@
       <span class="lenTag" id="lenTag2">×　深</span>
       <input id="lenIn2" class="mathInput" type="text" inputmode="decimal" enterkeyhint="done" aria-label="矩形的深">
       <span id="lenUnit">cm</span>
+      <button type="button" class="calcBtn" id="lenCalc" title="計算機" aria-label="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><circle cx="9" cy="12" r=".7" fill="currentColor"/><circle cx="12" cy="12" r=".7" fill="currentColor"/><circle cx="15" cy="12" r=".7" fill="currentColor"/><circle cx="9" cy="16" r=".7" fill="currentColor"/><circle cx="12" cy="16" r=".7" fill="currentColor"/><circle cx="15" cy="16" r=".7" fill="currentColor"/></svg></button>
       <label class="lenLab"><input type="checkbox" id="lenLabel">標尺寸</label>
       <button type="submit" class="btn primary" id="lenOk">確定</button>
       <button type="button" class="lenX" id="lenX" title="不用改">×</button>
@@ -982,12 +1055,28 @@
   </div>
 </div>
 
-<!-- 打尺寸時的算式按鈕列（貼在鍵盤上方） -->
-<div id="mathKeys">
-  <span id="mathRes"></span>
-  <button type="button" data-k="+">＋</button><button type="button" data-k="-">−</button><button type="button" data-k="×">×</button><button type="button" data-k="÷">÷</button>
-  <button type="button" data-k="(">(</button><button type="button" data-k=")">)</button>
-  <button type="button" data-k="=" class="eq">＝</button>
+<div id="vidBox"></div>
+
+<!-- 計算機：浮動面板，按住上面那條可以拖到旁邊 -->
+<div id="calc" role="dialog" aria-label="計算機">
+  <div class="calcHead" id="calcHead">
+    <svg class="grip" viewBox="0 0 22 14" fill="currentColor"><circle cx="4" cy="3" r="1.6"/><circle cx="11" cy="3" r="1.6"/><circle cx="18" cy="3" r="1.6"/><circle cx="4" cy="11" r="1.6"/><circle cx="11" cy="11" r="1.6"/><circle cx="18" cy="11" r="1.6"/></svg>
+    <b>計算機</b>
+    <button class="dlgX" id="calcClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+  </div>
+  <div class="calcScreen"><div id="calcExpr"></div><div id="calcOut">0</div></div>
+  <div id="calcHist"></div>
+  <div class="calcConv">
+    <button data-cv="tc">台尺→cm</button><button data-cv="ct">cm→台尺</button><button data-cv="pm">坪→m²</button><button data-cv="mp">m²→坪</button>
+  </div>
+  <div class="calcKeys" id="calcKeys">
+    <button data-k="C" class="clr">C</button><button data-k="(">(</button><button data-k=")">)</button><button data-k="÷" class="op">÷</button>
+    <button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="×" class="op">×</button>
+    <button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="−" class="op">−</button>
+    <button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="+" class="op">＋</button>
+    <button data-k="0">0</button><button data-k=".">.</button><button data-k="⌫" aria-label="刪一格">⌫</button><button data-k="=" class="eq">＝</button>
+  </div>
+  <button class="btn primary" id="calcUse">複製結果</button>
 </div>
 
 <!-- 更新說明（有新版本時自動跳出；設定→關於 也能打開） -->
@@ -1521,7 +1610,7 @@ function prefsObj() {
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
     quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill,
     trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
-    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer,
+    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer, calcPos: ui.calcPos,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
 }
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefsObj())); } catch (e) { /* 存不了就算了 */ } }
@@ -1566,6 +1655,7 @@ function applyPrefs(p) {
   if (p.theme) ui.theme = p.theme;
   if (p.quickLen === false) ui.quickLen = false;
   if (p.autoLayer === false) ui.autoLayer = false;
+  if (p.calcPos && isFinite(p.calcPos.x)) ui.calcPos = p.calcPos;
   if (p.quickLenLabel === false) ui.quickLenLabel = false;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
@@ -1695,6 +1785,7 @@ function afterChange() {
   render();
   save();
   updateUndoButtons();
+  refreshSketchChip();
 }
 
 
@@ -2598,7 +2689,7 @@ stage.addEventListener("pointerdown", (e) => {
   }
   if (tool === "text" && !canDrawOnActive()) return;
   if (tool === "eraser") {
-    action = { type: "erase", erased: false, last: [wx, wy] };
+    action = { type: "erase", erased: false, last: [wx, wy], nearSketch: sketchItemNear(wx, wy) };
     eraseSeg([wx, wy], [wx, wy]);
     showEraserCursor(wx, wy);
     return;
@@ -2629,7 +2720,7 @@ stage.addEventListener("pointerdown", (e) => {
   // 點到空白處：取消選取，拖曳就是移動畫布
   ui.selectedId = null;
   renderOverlay();
-  action = { type: "pan", sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y };
+  action = { type: "pan", sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y, tapW: [wx, wy] };
 });
 
 stage.addEventListener("pointermove", (e) => {
@@ -2743,6 +2834,7 @@ stage.addEventListener("pointermove", (e) => {
       break;
     }
     case "erase":
+      if (!action.nearSketch && !action.erased) action.nearSketch = sketchItemNear(wx, wy);
       eraseSeg(action.last, [wx, wy]);
       action.last = [wx, wy];
       showEraserCursor(wx, wy);
@@ -2836,6 +2928,8 @@ function endPointer(e) {
     afterChange();
   } else if (a.type === "erase") {
     liveG.innerHTML = "";
+    // 擦了半天沒擦到東西、但擦過草圖底稿：提醒草圖要回草圖模式才能擦
+    if (!a.erased && a.nearSketch) sketchNudge();
     afterChange();
   } else if (a.type === "shapeDraw") {
     liveG.innerHTML = "";
@@ -2853,6 +2947,8 @@ function endPointer(e) {
   } else if (["resize", "rotate", "p1", "p2"].includes(a.type)) {
     afterChange();
   } else if (a.type === "pan") {
+    // 選取工具點在淡淡的草圖線上（點不到）：提醒那是草圖底稿
+    if (a.tapW && Math.hypot(ui.view.x - a.vx, ui.view.y - a.vy) < 6 && sketchItemNear(a.tapW[0], a.tapW[1])) sketchNudge();
     save();
   }
 }
@@ -3406,7 +3502,7 @@ function openDimDialog(it, groups, opts = {}) {
     const a0 = it.pts[g.segs[0]], b0 = it.pts[g.segs[0] + 1];
     const nowLen = lenText(Math.hypot(b0[0] - a0[0], b0[1] - a0[1]));
     const val = cur || (scaleOn() ? nowLen : "");   // 照比例模式：先帶入目前長度，剛好就直接確定
-    row.innerHTML = `<label>${g.label}</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(val)}"><span class="u">${unit}</span>`;
+    row.innerHTML = `<label>${g.label}</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(val)}"><span class="u">${unit}</span>${CALC_BTN}`;
     const inp = row.querySelector("input");
     inp.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
@@ -3438,6 +3534,7 @@ function showDimNumbers(it, groups) {
   }).join("") + `<path d="${strokePath(it.pts, true)}" fill="none" stroke="${DIM_COLOR}" stroke-opacity="0.35" stroke-width="${Math.max(6, it.width + 6)}" stroke-linejoin="round"/>`;
 }
 function closeDim(ok) {
+  if (calc.fromField) closeCalc();
   $("dimModal").classList.remove("show");
   liveG.innerHTML = "";
   const ctx = dimCtx; dimCtx = null;
@@ -3528,7 +3625,7 @@ function openFreeDim(it, isNew) {
   $("dimTitle").textContent = isNew ? "自由標註" : "修改標註";
   $("dimHint").textContent = `單位：${UNIT_NAME[unit]}（${unit}）`;
   const auto = isNew && scaleOn() ? lenText(Math.hypot(it.x2 - it.x1, it.y2 - it.y1)) : "";
-  $("dimFields").innerHTML = `<div class="dimField"><label>距離</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(it.v || auto)}"><span class="u">${unit}</span></div>`;
+  $("dimFields").innerHTML = `<div class="dimField"><label>距離</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(it.v || auto)}"><span class="u">${unit}</span>${CALC_BTN}</div>`;
   const inp = $("dimFields").querySelector("input");
   inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); closeDim(true); } });
   $("dimFlip").style.display = "";
@@ -3816,7 +3913,7 @@ function renderLayerList() {
 }
 function layersChanged(undoable) {
   if (ui.selectedId) { const it = selected(); if (!it || !isEditable(it)) ui.selectedId = null; }
-  render(); save(); renderLayerList(); updateUndoButtons();
+  render(); save(); renderLayerList(); updateUndoButtons(); refreshSketchChip();
 }
 function moveLayer(idx, dir) {
   const j = idx + dir;
@@ -3892,7 +3989,12 @@ function setMode(mode) {
   applyModeUI();
   refreshScaleUI();
   render(); save();
-  if (mode === "fine") toast(doc.items.some((i) => layerOf(i).sketch) ? "草圖已變成淡淡的底稿（鎖住了），直接在上面描" : "精畫模式：工具全部打開了");
+  if (mode === "fine") {
+    const hasSketch = sketchItems().length > 0;
+    let seen = true; try { seen = !!localStorage.getItem(SKETCH_EXPLAINED_KEY); } catch (e) { /* 讀不到就當看過 */ }
+    if (hasSketch && !seen) { openSketchPop(); try { localStorage.setItem(SKETCH_EXPLAINED_KEY, "1"); } catch (e) { /* 存不了就算了 */ } }
+    else toast(hasSketch ? "草圖變成淡淡的底稿了，直接在上面描（下面「草圖底稿」可以回去改）" : "精畫模式：工具全部打開了");
+  }
   else toast("草圖模式：隨手畫，尺寸用筆寫在旁邊就好");
 }
 function applyModeUI() {
@@ -3904,10 +4006,71 @@ function applyModeUI() {
   $("tray").style.display = sk ? "none" : "";
   $("exportSketch").checked = !!doc.meta.exportSketch;
   if (sk && !SKETCH_TOOLS.includes(ui.tool)) setTool("pen");
+  refreshSketchChip();
   requestAnimationFrame(() => renderOverlay());
 }
 document.querySelectorAll("#modeSeg button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.m)));
 $("exportSketch").addEventListener("change", (e) => { doc.meta.exportSketch = e.target.checked; save(); });
+/* ---------- 草圖底稿膠囊 ----------
+   精畫模式下有草圖時，畫面下方出現「草圖底稿」，點開有說明和三個選擇。
+   第一次切到精畫會自動打開說明；在淡淡的線上點、擦不掉時，膠囊會跳一下提醒。 */
+var SKETCH_EXPLAINED_KEY = "floorplan-sketch-explained";
+function sketchItems() { const l = doc.layers.find((x) => x.sketch); return l ? doc.items.filter((i) => i.layer === l.id) : []; }
+function refreshSketchChip() {
+  const l = doc.layers.find((x) => x.sketch);
+  const show = doc.mode !== "sketch" && !!l && sketchItems().length > 0 && !document.body.classList.contains("inLibrary");
+  $("sketchChip").classList.toggle("show", show);
+  if (!show) { $("sketchPop").classList.remove("show"); return; }
+  $("sketchChipState").textContent = l.visible ? "淡淡顯示" : "已隱藏";
+  $("skHideTxt").innerHTML = l.visible ? "先藏起來<small>描好了，暫時不看草圖</small>" : "再顯示出來<small>草圖會淡淡地出現在下面</small>";
+}
+function openSketchPop() { refreshSketchChip(); if ($("sketchChip").classList.contains("show")) $("sketchPop").classList.add("show"); }
+function closeSketchPop() { $("sketchPop").classList.remove("show"); }
+var sketchNudgeAt = 0;
+function sketchNudge() {
+  if (Date.now() - sketchNudgeAt < 4000) return;
+  sketchNudgeAt = Date.now();
+  const c = $("sketchChip"); c.classList.remove("nudge"); void c.offsetWidth; c.classList.add("nudge");
+  toast("這是草圖底稿（鎖住了）。要修改請點下面的「草圖底稿」");
+}
+// 點的位置旁邊有沒有草圖的線（精畫模式下草圖點不到，用這個判斷要不要提醒）
+function sketchItemNear(wx, wy) {
+  const l = doc.layers.find((x) => x.sketch);
+  if (!l || !l.visible || doc.mode === "sketch") return false;
+  const r = 14 / ui.view.z;
+  return sketchItems().some((it) => {
+    if (it.type === "stroke") {
+      for (let i = 0; i < it.pts.length - 1; i++) if (distToSeg([wx, wy], it.pts[i], it.pts[i + 1]) < r + it.width / 2) return true;
+      return it.pts.length === 1 && Math.hypot(it.pts[0][0] - wx, it.pts[0][1] - wy) < r;
+    }
+    if (it.type === "text") { const [w, h] = textDims(it); return wx > it.x - r && wx < it.x + w + r && wy > it.y - r && wy < it.y + h + r; }
+    return false;
+  });
+}
+$("sketchChip").addEventListener("click", () => { $("sketchPop").classList.contains("show") ? closeSketchPop() : openSketchPop(); });
+$("sketchPopX").addEventListener("click", closeSketchPop);
+$("skBack").addEventListener("click", () => { closeSketchPop(); setMode("sketch"); });
+$("skHide").addEventListener("click", () => {
+  const l = doc.layers.find((x) => x.sketch); if (!l) return;
+  l.visible = !l.visible; layersChanged(true); refreshSketchChip();
+  toast(l.visible ? "草圖底稿顯示出來了" : "草圖底稿藏起來了（點下面的膠囊可以再打開）");
+});
+$("skConvert").addEventListener("click", () => {
+  const l = doc.layers.find((x) => x.sketch); if (!l) return;
+  const to = doc.layers.find((x) => x.id === doc.activeLayer && !x.sketch) || doc.layers.find((x) => !x.sketch);
+  if (!to) return;
+  pushUndo();
+  sketchItems().forEach((it) => { it.layer = to.id; });
+  closeSketchPop();
+  afterChange(); layersChanged(true); refreshSketchChip();
+  toast("草圖變成正式的線了，匯出會一起印（按復原可以改回來）");
+});
+// 點畫布別的地方就收起說明（這一下只負責關，不會順便畫到東西）
+stage.addEventListener("pointerdown", (e) => {
+  if (!$("sketchPop").classList.contains("show")) return;
+  closeSketchPop(); e.stopImmediatePropagation(); e.preventDefault();
+}, true);
+
 
 /* ---------- 版面設定：工具列位置 ---------- */
 function setToolbarPos(pos) {
@@ -4001,7 +4164,7 @@ function openLenPop(it) {
   pop.style.top = Math.max(70, Math.min(H - ph - 8, y)) + "px";
   $("lenIn").focus(); $("lenIn").select();
 }
-function closeLenPop() { $("lenPop").classList.remove("show"); lenPopId = null; $("lenIn").blur(); $("lenIn2").blur(); }
+function closeLenPop() { if (calc.fromField) closeCalc(); $("lenPop").classList.remove("show"); lenPopId = null; $("lenIn").blur(); $("lenIn2").blur(); }
 $("lenPop").addEventListener("submit", (e) => {
   e.preventDefault();
   const it = doc.items.find((x) => x.id === lenPopId);
@@ -4352,7 +4515,7 @@ for (const [modal, btn] of [["settingsModal", "settingsClose"], ["layersModal", 
   $(modal).addEventListener("click", (e) => { if (e.target === $(modal)) $(btn).click(); });
 }
 // 對話框右上角的 ×：等於按那個對話框的「完成」
-document.querySelectorAll(".dlgX").forEach((b) => b.addEventListener("click", () => $(b.dataset.for).click()));
+document.querySelectorAll(".dlgX[data-for]").forEach((b) => b.addEventListener("click", () => $(b.dataset.for).click()));
 document.querySelectorAll("#dimModeSeg button").forEach((b) => b.addEventListener("click", () => { ui.dimMode = b.dataset.v; refreshSettings(); save(); }));
 document.querySelectorAll("#unitSeg button").forEach((b) => b.addEventListener("click", () => {
   doc.meta.unit = b.dataset.v; ui.dimUnit = b.dataset.v; refreshSettings(); save();
@@ -5140,14 +5303,14 @@ const GESTURES_HTML = `
   <div class="gest"><svg viewBox="0 0 64 52" class="pinch"><circle class="f a" cx="24" cy="30" r="8"/><circle class="f b" cx="40" cy="22" r="8"/></svg><b>兩指捏合</b>放大縮小</div>
   <div class="gest"><svg viewBox="0 0 64 52" class="drag"><circle class="f" cx="32" cy="26" r="9"/></svg><b>手指拖曳</b>移動畫面（筆畫圖）</div>`;
 const TIPS = [
-  { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的底稿讓你描。", target: "#modeSeg" },
+  { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的<b>底稿</b>讓你描（下面的「草圖底稿」可以回去改或藏起來）。", target: "#modeSeg" },
   { id: "straighten", title: "按住拉直", text: "畫完<b>先別放開筆</b>，停 0.5 秒：歪歪的線會變直線，畫一圈會變成方正的矩形。", target: '[data-tool="pen"]' },
-  { id: "room", title: "牆壁筆畫房間", text: "牆壁筆像立可帶。畫一個矩形就是房間，畫小方塊就是柱子。照比例模式下畫完可以直接打<b>寬×深</b>。", target: '[data-tool="wall"]' },
-  { id: "dims", title: "標尺寸", text: "點「?」輸入這段的長度，或從一點拉到另一點。可以直接打算式，例如 <b>85+120+60</b>。", target: '[data-tool="dim"]' },
+  { id: "room", title: "畫房間和柱子", text: "牆壁筆畫一圈、<b>停住</b>就是房間；沿著牆的內側畫一小段就是<b>柱子</b>。用選取點一下，就能拖到別的位置。", target: '[data-tool="wall"]' },
+  { id: "dims", title: "標尺寸＋計算機", text: "點「?」輸入這段的長度。要加加減減就點旁邊的<b>計算機</b>，算好按「帶入」。也可以從一點拉到另一點自由標註。", target: '[data-tool="dim"]' },
   { id: "symbols", title: "放符號", text: "下面的符號點一下就放進圖裡。拖<b>四個角</b>等比例縮放、拖<b>四邊</b>只拉長，上面的圓點旋轉。", target: "#tray" },
   { id: "text", title: "打字", text: "用文字工具<b>點哪裡就在哪裡打字</b>，常用字在下面。選取後可以旋轉。", target: '[data-tool="text"]' },
 ];
-const TIP_H = { sketch: 560, straighten: 584, room: 584, dims: 614, symbols: 570, text: 520 };   // 每支短片的高度（寬都是 760）
+const TIP_H = { sketch: 570, straighten: 570, room: 570, dims: 570, symbols: 570, text: 570 };   // 每支短片 760×570（整個畫面一起錄，跟 iPad 實際看到的一樣）
 const TOUR = [
   { title: "歡迎使用丈量手帳", text: "花 1 分鐘看看怎麼用。每一步都有示範短片，隨時可以按「跳過教學」。", target: null },
   ...TIPS.map((t) => ({ ...t, video: "tip-" + t.id + ".mp4", vw: 760, vh: TIP_H[t.id] })),
@@ -5176,6 +5339,7 @@ function showTourStep() {
   $("tourMedia").innerHTML = st.video
     ? `<video src="${st.video}" width="${st.vw}" height="${st.vh}" autoplay muted loop playsinline preload="auto" poster="${st.video.replace(".mp4", ".jpg")}"></video>`
     : st.gestures ? `<div class="gestures">${GESTURES_HTML}</div>` : "";
+  $("tourCard").classList.toggle("hasVideo", !!st.video);
   $("tourPrev").style.visibility = tourIdx ? "" : "hidden";
   $("tourNext").textContent = tourIdx === TOUR.length - 1 ? "開始畫圖" : tourIdx === 0 ? "開始" : "下一步";
   placeTour();
@@ -5225,15 +5389,19 @@ function maybeStartTour() {
 // 使用說明
 function openHelp() {
   closeMore(); $("settingsModal").classList.remove("show");
-  $("helpList").innerHTML = TIPS.map((t) => `<div class="helpItem"><video src="tip-${t.id}.mp4" poster="tip-${t.id}.jpg" muted loop playsinline preload="none"></video><b>${t.title}</b><span>${t.text}</span></div>`).join("");
-  // 點影片才播放（一次只播一支，省電）
-  $("helpList").querySelectorAll("video").forEach((v) => v.addEventListener("click", () => {
-    $("helpList").querySelectorAll("video").forEach((o) => { if (o !== v) o.pause(); });
-    v.paused ? v.play() : v.pause();
-  }));
+  $("helpList").innerHTML = TIPS.map((t) => `<div class="helpItem"><div class="zoomHint"><video src="tip-${t.id}.mp4" poster="tip-${t.id}.jpg" muted loop playsinline preload="none" data-tip="${t.id}"></video></div><b>${t.title}</b><span>${t.text}</span></div>`).join("");
+  // 點影片＝放大播放（小格子看不清楚）
+  $("helpList").querySelectorAll("video").forEach((v) => v.addEventListener("click", () => openVidBox(v.dataset.tip)));
   $("helpGestures").innerHTML = GESTURES_HTML;
   $("helpModal").classList.add("show");
 }
+// 放大看示範短片：點任何地方關閉
+function openVidBox(id) {
+  const t = TIPS.find((x) => x.id === id); if (!t) return;
+  $("vidBox").innerHTML = `<video src="tip-${id}.mp4" poster="tip-${id}.jpg" autoplay muted loop playsinline></video><b>${t.title}</b><span>點一下關閉</span>`;
+  $("vidBox").classList.add("show");
+}
+$("vidBox").addEventListener("click", () => { $("vidBox").classList.remove("show"); $("vidBox").innerHTML = ""; });
 $("btnHelp").addEventListener("click", openHelp);
 $("btnHelpMenu").addEventListener("click", openHelp);
 $("helpClose").addEventListener("click", () => { $("helpModal").classList.remove("show"); $("helpList").innerHTML = ""; });
@@ -5244,45 +5412,192 @@ $("helpTour").addEventListener("click", () => {
   else startTour();
 });
 
-/* ---------- 算式按鈕列 ----------
-   焦點在尺寸輸入框（class="mathInput"）時出現在鍵盤上方；按 ＋−×÷() 插入符號，即時顯示結果，按「＝」換成結果 */
-let mathTarget = null;
-function placeMathKeys() {
-  // iPad 鍵盤打開時，visualViewport 會變矮：按鈕列貼在鍵盤上面
-  const vv = window.visualViewport;
-  const kb = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
-  $("mathKeys").style.bottom = kb + 10 + "px";
+/* ---------- 計算機 ----------
+   浮動面板，自己有數字鍵（不用叫 iPad 鍵盤）。按住上面那條可以拖到旁邊，位置會記住。
+   ・從尺寸框旁邊的計算機小按鈕打開：下面的大按鈕是「帶入」，算好一按就填回那一格
+   ・從上方工具列打開：大按鈕是「複製結果」
+   ・台尺／坪 換算：對目前的數字做換算（1 台尺 = 30.3 cm；1 坪 = 3.30579 m²）
+   ・算過的會留在上面的紀錄，點一下就拿回來用 */
+var CALC_BTN = `<button type="button" class="calcBtn" title="計算機" aria-label="計算機">${$("btnCalc").innerHTML}</button>`;
+const CALC_HIST_KEY = "floorplan-calc-hist";
+const calc = { expr: "", justEq: false, target: null, fromField: false, hist: [] };
+try { calc.hist = JSON.parse(localStorage.getItem(CALC_HIST_KEY)) || []; } catch (e) { calc.hist = []; }
+const CALC_OPS = "+−×÷";
+// 計算機的數字顯示：最多兩位小數（坪數、台尺需要），去掉多餘的 0
+const fmtCalc = (n) => String(Math.round(n * 100) / 100);
+// 目前的數字：算式就算出來；空白＝0；算不出來＝null
+function calcValue() {
+  if (!calc.expr) return 0;
+  return evalMath(calc.expr);
 }
-function updateMathRes() {
-  if (!mathTarget) return;
-  const v = mathTarget.value;
-  const r = hasMathOp(v) ? evalMath(v) : null;
-  $("mathRes").textContent = r !== null ? "＝ " + fmtNum(r) : "";
+// 目標輸入框還在畫面上嗎（對話框關了就不算）
+const calcTargetAlive = () => calc.target && calc.target.isConnected && calc.target.offsetParent !== null;
+function calcRender(errMsg) {
+  const out = $("calcOut");
+  out.classList.toggle("err", !!errMsg);
+  if (errMsg) { out.textContent = errMsg; }
+  else if (calc.justEq || !hasMathOp(calc.expr)) { out.textContent = calc.expr || "0"; }
+  else { const r = evalMath(calc.expr); out.textContent = r !== null ? fmtCalc(r) : (calc.expr.match(/[\d.]+$/) || ["…"])[0]; }
+  // 上面那行：打算式時顯示整串算式；按了＝之後顯示「算式 =」
+  $("calcExpr").textContent = calc.justEq ? calc.lastExpr ? calc.lastExpr + " =" : "" : hasMathOp(calc.expr) ? calc.expr : "";
+  $("calcHist").innerHTML = calc.hist.map((h, i) => `<button data-h="${i}"><span>${escapeXml(h.e)}</span><b>${escapeXml(h.r)}</b></button>`).join("");
+  const alive = calcTargetAlive();
+  $("calcUse").textContent = alive ? `帶入${calc.targetName ? "「" + calc.targetName + "」" : ""}` : "複製結果";
 }
-document.addEventListener("focusin", (e) => {
-  if (!e.target.classList || !e.target.classList.contains("mathInput")) return;
-  mathTarget = e.target;
-  $("mathKeys").classList.add("show"); placeMathKeys(); updateMathRes();
-});
-document.addEventListener("focusout", (e) => {
-  if (e.target !== mathTarget) return;
-  setTimeout(() => { if (document.activeElement !== mathTarget) { $("mathKeys").classList.remove("show"); mathTarget = null; } }, 120);
-});
-document.addEventListener("input", (e) => { if (e.target === mathTarget) updateMathRes(); });
-if (window.visualViewport) { visualViewport.addEventListener("resize", placeMathKeys); visualViewport.addEventListener("scroll", placeMathKeys); }
-$("mathKeys").addEventListener("pointerdown", (e) => e.preventDefault());   // 按按鈕時輸入框不要失去焦點（鍵盤不要收起來）
-$("mathKeys").addEventListener("click", (e) => {
-  const b = e.target.closest("button"); if (!b || !mathTarget) return;
-  const t = mathTarget, k = b.dataset.k;
+function calcPushHist(e, r) {
+  calc.hist.unshift({ e, r });
+  calc.hist = calc.hist.slice(0, 12);
+  try { localStorage.setItem(CALC_HIST_KEY, JSON.stringify(calc.hist)); } catch (err) { /* 存不了就算了 */ }
+}
+function calcKey(k) {
+  let e = calc.expr;
+  const last = e.slice(-1);
+  if (k === "C") { calc.expr = ""; calc.justEq = false; calc.lastExpr = ""; calcRender(); return; }
+  if (k === "⌫") { calc.expr = calc.justEq ? "" : e.slice(0, -1); calc.justEq = false; calcRender(); return; }
   if (k === "=") {
-    const r = evalMath(t.value); if (r !== null) t.value = fmtNum(r);
-  } else {
-    // 插在游標的位置
-    const a = t.selectionStart ?? t.value.length, z = t.selectionEnd ?? t.value.length;
-    t.value = t.value.slice(0, a) + k + t.value.slice(z);
-    t.setSelectionRange(a + k.length, a + k.length);
+    if (CALC_OPS.includes(last) || last === "(") { calcRender("算式還沒打完"); return; }
+    if (!hasMathOp(e)) { calcRender(); return; }
+    const r = evalMath(e);
+    if (r === null) { calcRender("算式還沒打完"); return; }
+    const rs = fmtCalc(r);
+    calcPushHist(e, rs);
+    calc.lastExpr = e; calc.expr = rs; calc.justEq = true;
+    calcRender(); return;
   }
-  t.focus(); updateMathRes();
+  if (CALC_OPS.includes(k)) {
+    if (!e && k !== "−") return;                        // 一開始不能先按 ＋×÷
+    if (CALC_OPS.includes(last)) e = e.slice(0, -1);     // 連按兩個符號＝換成後按的
+    calc.expr = e + k; calc.justEq = false; calcRender(); return;
+  }
+  // 數字、小數點、括號
+  if (calc.justEq) { e = ""; calc.justEq = false; }      // 按完＝直接打數字＝重新算
+  if (k === ".") {
+    const tail = (e.match(/[\d.]*$/) || [""])[0];
+    if (tail.includes(".")) return;                      // 一個數字只能有一個小數點
+    if (!tail) k = "0.";
+  }
+  calc.expr = (e + k).slice(0, 60);
+  calcRender();
+}
+function calcConvert(kind) {
+  const v = calcValue();
+  if (v === null) { calcRender("算式還沒打完"); return; }
+  const n = v;
+  const T = { tc: [30.3, "台尺", "cm"], ct: [1 / 30.3, "cm", "台尺"], pm: [3.30579, "坪", "m²"], mp: [0.3025, "m²", "坪"] }[kind];
+  const r = n * T[0], rs = fmtCalc(r);
+  calcPushHist(`${fmtCalc(n)} ${T[1]}`, `${rs} ${T[2]}`);
+  calc.lastExpr = `${fmtCalc(n)} ${T[1]} → ${T[2]}`; calc.expr = rs; calc.justEq = true;
+  calcRender();
+}
+// 放在哪裡：從輸入框打開＝放在那個框（對話框）旁邊；從工具列打開＝上次拖到的位置
+function placeCalc(near) {
+  const el = $("calc"), cw = el.offsetWidth, ch = el.offsetHeight, W = innerWidth, H = innerHeight;
+  let x, y;
+  if (near) {
+    const r = near.getBoundingClientRect();
+    if (r.right + 12 + cw <= W - 8) x = r.right + 12;
+    else if (r.left - 12 - cw >= 8) x = r.left - 12 - cw;
+    else x = W - cw - 8;
+    y = r.top + r.height / 2 - ch / 2;
+  } else if (ui.calcPos) { x = ui.calcPos.x; y = ui.calcPos.y; }
+  else { x = W - cw - 20; y = 76; }
+  el.style.left = Math.max(8, Math.min(W - cw - 8, x)) + "px";
+  el.style.top = Math.max(8, Math.min(H - ch - 8, y)) + "px";
+}
+function openCalc(target) {
+  calc.target = target || null;
+  calc.fromField = !!target;
+  calc.targetName = "";
+  if (target) {
+    const lab = target.closest(".dimField") && target.closest(".dimField").querySelector("label");
+    calc.targetName = lab ? lab.textContent.trim() : target === $("lenIn2") ? "深" : $("lenPop").classList.contains("rect") ? "寬" : "長度";
+    target.blur();   // 收起 iPad 鍵盤，改用計算機的按鈕
+  }
+  calc.expr = ""; calc.justEq = false; calc.lastExpr = "";
+  $("calc").classList.add("show");
+  calcRender();
+  // 從尺寸對話框打開：對話框靠左，計算機放右邊
+  const modal = target && target.closest(".modal");
+  if (modal) modal.classList.add("calcSide");
+  requestAnimationFrame(() => placeCalc(target ? (modal ? modal.querySelector(".dialog") : target.closest("form, .dialog") || target) : null));
+}
+function closeCalc() {
+  $("calc").classList.remove("show");
+  document.querySelectorAll(".modal.calcSide").forEach((m) => m.classList.remove("calcSide"));
+  calc.target = null;
+}
+$("btnCalc").addEventListener("click", () => { $("calc").classList.contains("show") && !calc.fromField ? closeCalc() : openCalc(null); });
+$("calcClose").addEventListener("click", closeCalc);
+$("calcKeys").addEventListener("click", (e) => { const b = e.target.closest("button"); if (b) calcKey(b.dataset.k); });
+document.querySelectorAll(".calcConv button").forEach((b) => b.addEventListener("click", () => calcConvert(b.dataset.cv)));
+$("calcHist").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  const h = calc.hist[+b.dataset.h]; if (!h) return;
+  calc.expr = String(parseFloat(h.r)); calc.lastExpr = h.e; calc.justEq = true; calcRender();
+});
+$("calcUse").addEventListener("click", async () => {
+  const v = calcValue();
+  if (v === null) { calcRender("算式還沒打完"); return; }
+  if (hasMathOp(calc.expr) && !calc.justEq) calcKey("=");   // 還沒按＝也幫忙算
+  if (calcTargetAlive()) {
+    if (v <= 0) { calcRender("尺寸要大於 0"); return; }
+    calc.target.value = fmtNum(v);   // 尺寸只留一位小數
+    calc.target.dispatchEvent(new Event("input", { bubbles: true }));
+    calc.target.classList.add("calcFilled"); setTimeout(() => calc.target && calc.target.classList.remove("calcFilled"), 600);
+    toast(`已帶入 ${fmtNum(v)}`);
+    if (calc.fromField) closeCalc();
+  } else {
+    const s = fmtCalc(v);
+    try { await navigator.clipboard.writeText(s); toast(`已複製 ${s}`); } catch (e) { toast(`結果：${s}`); }
+  }
+});
+// 尺寸框旁邊的計算機小按鈕（尺寸對話框每一格都有；長度框是對應最後點的那一格）
+let lastMathInput = null;
+document.addEventListener("focusin", (e) => { if (e.target.classList && e.target.classList.contains("mathInput")) lastMathInput = e.target; });
+document.addEventListener("pointerdown", (e) => { if (e.target.closest(".calcBtn")) e.preventDefault(); }, true);   // 按小按鈕不要先叫出鍵盤
+document.addEventListener("click", (e) => {
+  const b = e.target.closest(".calcBtn"); if (!b) return;
+  let t = b.parentElement.querySelector(".mathInput");
+  if (b.id === "lenCalc") t = lastMathInput && $("lenPop").contains(lastMathInput) && lastMathInput.offsetParent ? lastMathInput : $("lenIn");
+  openCalc(t);
+});
+// 拖上面那條移動計算機
+(() => {
+  let drag = null;
+  $("calcHead").addEventListener("pointerdown", (e) => {
+    if (e.target.closest("button")) return;
+    const r = $("calc").getBoundingClientRect();
+    drag = { dx: e.clientX - r.left, dy: e.clientY - r.top, id: e.pointerId };
+    $("calcHead").setPointerCapture(e.pointerId);
+  });
+  $("calcHead").addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    const el = $("calc"), W = innerWidth, H = innerHeight;
+    const x = Math.max(8, Math.min(W - el.offsetWidth - 8, e.clientX - drag.dx)), y = Math.max(8, Math.min(H - el.offsetHeight - 8, e.clientY - drag.dy));
+    el.style.left = x + "px"; el.style.top = y + "px";
+  });
+  const end = () => {
+    if (!drag) return; drag = null;
+    if (!calc.fromField) { ui.calcPos = { x: parseFloat($("calc").style.left), y: parseFloat($("calc").style.top) }; savePrefs(); }
+  };
+  $("calcHead").addEventListener("pointerup", end); $("calcHead").addEventListener("pointercancel", end);
+})();
+// 接實體鍵盤也能按（沒有在打字的時候）
+document.addEventListener("keydown", (e) => {
+  if (!$("calc").classList.contains("show")) return;
+  const a = document.activeElement;
+  if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return;
+  const map = { "*": "×", x: "×", "/": "÷", "-": "−", "+": "+", Enter: "=", "=": "=", Backspace: "⌫", Escape: "C", ".": ".", "(": "(", ")": ")" };
+  const k = /^\d$/.test(e.key) ? e.key : map[e.key];
+  if (!k) return;
+  if (e.key === "Escape" && !calc.expr) { closeCalc(); return; }
+  e.preventDefault(); calcKey(k);
+});
+// 轉向（直式↔橫式）時，不要跑出畫面外
+addEventListener("resize", () => {
+  const el = $("calc"); if (!el.classList.contains("show")) return;
+  el.style.left = Math.max(8, Math.min(innerWidth - el.offsetWidth - 8, parseFloat(el.style.left))) + "px";
+  el.style.top = Math.max(8, Math.min(innerHeight - el.offsetHeight - 8, parseFloat(el.style.top))) + "px";
 });
 
 // 點 LINE ID 就複製，業務可以直接貼到 LINE 搜尋加好友
@@ -5400,8 +5715,15 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08.3";
+const APP_VERSION = "2026.11.08.4";
 const CHANGELOG = [
+  ["2026.11.08.4", [
+    "新增計算機：上方工具列的計算機按鈕，或尺寸框旁邊的小按鈕。有自己的數字鍵，算好按「帶入」就填進尺寸",
+    "計算機可以換算 台尺↔公分、坪↔平方公尺，算過的會留紀錄；按住上面那條可以拖到旁邊",
+    "精畫模式畫面下方多了「草圖底稿」：說明淡淡的線是什麼，可以回草圖修改、先藏起來，或直接把草圖當正式圖",
+    "示範短片全部重錄，新增「畫房間和柱子」；在使用說明點影片可以放大看",
+    "拿掉打尺寸時鍵盤上方的算式按鈕列（改用計算機）",
+  ]],
   ["2026.11.08.3", [
     "新手教學：一步一步介紹每個工具，附示範短片（「⋯」→「使用說明」可以重看）",
     "符號四個角都能拉（對角固定、等比例），拉四邊中間只改一個方向",
