@@ -581,6 +581,15 @@
   #sketchPop .acts button span { display: flex; flex-direction: column; }
   #sketchPop .acts button small { font-weight: 400; font-size: 12.5px; color: var(--ink2); margin-top: 1px; }
   #sketchPop .acts svg { width: 22px; height: 22px; flex: 0 0 auto; color: var(--sel); }
+  /* 公告條：首頁、使用說明、新手教學第一步都會出現（內容改 NOTICE 就好） */
+  .notice { display: flex; align-items: flex-start; gap: 10px; padding: 12px 12px 12px 14px; border-radius: 14px; background: #fdf3e7; border: 1px solid #f1d9bd; color: #6b3f1d; font-size: 14px; line-height: 1.55; }
+  .notice svg.i { flex: 0 0 auto; width: 20px; height: 20px; margin-top: 1px; color: var(--glaze); }
+  .notice span { flex: 1; }
+  .notice .dlgX { width: 30px; height: 30px; margin: -4px -2px -4px 0; background: transparent; color: #a8754f; }
+  #libNotice { margin: 0 0 16px; }
+  #libNotice[hidden] { display: none; }
+  .helpNotice { margin: 0 0 14px; }
+  .tourNote { display: block; margin-top: 8px; font-size: 13px; color: #8a5a34; }
   /* ===================== 計算機（浮動面板，可以拖） ===================== */
   #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
     background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
@@ -590,7 +599,7 @@
   .calcHead .grip { width: 22px; height: 14px; color: #a7aec0; }
   .calcScreen { background: var(--ground); border-radius: 14px; padding: 8px 12px 6px; text-align: right; font-variant-numeric: tabular-nums; }
   #calcExpr { min-height: 20px; font-size: 15px; color: var(--ink2); word-break: break-all; }
-  #calcOut { font-size: 34px; font-weight: 700; line-height: 1.2; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  #calcOut { font-size: 34px; font-weight: 700; line-height: 41px; height: 41px; color: var(--ink); overflow: hidden; white-space: nowrap; }
   #calcOut.err { color: var(--glaze); font-size: 18px; line-height: 41px; }
   #calcHistWrap { display: none; flex-direction: column; gap: 2px; }
   #calcHistWrap.has { display: flex; }
@@ -614,9 +623,9 @@
   .calcKeys .eq { background: var(--sel); color: #fff; }
   #calcUse { height: 46px; font-size: 16px; width: 100%; }
   /* 尺寸框旁邊的計算機小按鈕 */
-  .calcBtn { width: 38px; height: 38px; flex: 0 0 auto; border: none; border-radius: 10px; background: var(--ground); color: var(--ink2); padding: 0; display: flex; align-items: center; justify-content: center; }
+  .calcBtn { height: 40px; flex: 0 0 auto; border: none; border-radius: 11px; background: var(--selSoft); color: var(--sel); padding: 0 10px 0 7px; display: flex; align-items: center; justify-content: center; gap: 3px; font-size: 14px; font-weight: 600; white-space: nowrap; }
   .calcBtn:active { background: var(--ground2); }
-  .calcBtn svg { width: 20px; height: 20px; }
+  .calcBtn svg { width: 22px; height: 22px; }
   /* 從尺寸對話框打開計算機：對話框靠左，計算機放右邊，不會擋住 */
   .modal.calcSide { justify-content: flex-start; }
   .mathInput.calcFilled { animation: calcFill .6s ease-out; }
@@ -656,6 +665,8 @@
     <button class="btn" id="libNewFolder"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M12 10v6M9 13h6"/></svg>新資料夾</button>
     <button class="btn primary" id="libNewDoc"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新平面圖</button>
   </div>
+  <!-- 公告（內容在程式裡的 NOTICE） -->
+  <div class="notice" id="libNotice" hidden><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span id="libNoticeText"></span><button class="dlgX" id="libNoticeX" title="知道了" aria-label="關閉公告"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
   <div class="libGrid" id="libGrid"></div>
   <!-- 開發者聯絡方式：之後換工作也聯絡得到（改這裡就好） -->
   <footer class="libFoot">
@@ -685,7 +696,7 @@
     </div>
     <span class="tbSep"></span>
     <button class="btn ghost layerBtn" id="btnLayers" title="圖層"></button>
-    <button class="btn ghost icon" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><circle cx="9" cy="12" r=".7" fill="currentColor"/><circle cx="12" cy="12" r=".7" fill="currentColor"/><circle cx="15" cy="12" r=".7" fill="currentColor"/><circle cx="9" cy="16" r=".7" fill="currentColor"/><circle cx="12" cy="16" r=".7" fill="currentColor"/><circle cx="15" cy="16" r=".7" fill="currentColor"/></svg></button>
+    <button class="btn ghost" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span class="lbl">計算機</span></button>
     <button class="btn ghost" id="btnSettings" title="設定"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">設定</span></button>
     <button class="btn ghost icon" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
     <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
@@ -863,7 +874,7 @@
       <span class="lenTag" id="lenTag2">×　深</span>
       <input id="lenIn2" class="mathInput" type="text" inputmode="decimal" enterkeyhint="done" aria-label="矩形的深">
       <span id="lenUnit">cm</span>
-      <button type="button" class="calcBtn" id="lenCalc" title="計算機" aria-label="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2.5"/><path d="M8.5 7h7"/><circle cx="9" cy="12" r=".7" fill="currentColor"/><circle cx="12" cy="12" r=".7" fill="currentColor"/><circle cx="15" cy="12" r=".7" fill="currentColor"/><circle cx="9" cy="16" r=".7" fill="currentColor"/><circle cx="12" cy="16" r=".7" fill="currentColor"/><circle cx="15" cy="16" r=".7" fill="currentColor"/></svg></button>
+      <button type="button" class="calcBtn" id="lenCalc" title="計算機" aria-label="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span>計算機</span></button>
       <label class="lenLab"><input type="checkbox" id="lenLabel">標尺寸</label>
       <button type="submit" class="btn primary" id="lenOk">確定</button>
       <button type="button" class="lenX" id="lenX" title="不用改">×</button>
@@ -1053,6 +1064,7 @@
 <div class="modal" id="helpModal">
   <div class="dialog helpDlg">
     <div class="dlgHead"><h3>使用說明</h3><button class="dlgX" data-for="helpClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="notice helpNotice" id="helpNotice" hidden><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10v4a1 1 0 0 0 1 1h2l5 4V5L7 9H5a1 1 0 0 0-1 1z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a7.5 7.5 0 0 1 0 11"/></svg><span id="helpNoticeText"></span></div>
     <div class="helpTop"><button class="btn primary" id="helpTour">重新跑一次新手教學</button></div>
     <div id="helpList" class="helpList"></div>
     <h4 class="helpH">手勢</h4>
@@ -5341,7 +5353,7 @@ function showTourStep() {
   const st = TOUR[tourIdx];
   $("tourStep").textContent = `${tourIdx + 1} / ${TOUR.length}`;
   $("tourTitle").textContent = st.title;
-  $("tourText").innerHTML = st.text;
+  $("tourText").innerHTML = st.text + (tourIdx === 0 && NOTICE ? `<span class="tourNote">${escapeXml(NOTICE.text)}</span>` : "");
   $("tourMedia").innerHTML = st.video
     ? `<video src="${st.video}" width="${st.vw}" height="${st.vh}" autoplay muted loop playsinline preload="auto" poster="${st.video.replace(".mp4", ".jpg")}"></video>`
     : st.gestures ? `<div class="gestures">${GESTURES_HTML}</div>` : "";
@@ -5424,7 +5436,7 @@ $("helpTour").addEventListener("click", () => {
    ・從上方工具列打開：大按鈕是「複製結果」
    ・台尺／坪 換算：對目前的數字做換算（1 台尺 = 30.3 cm；1 坪 = 3.30579 m²）
    ・算過的會留在上面的紀錄，點一下就拿回來用 */
-var CALC_BTN = `<button type="button" class="calcBtn" title="計算機" aria-label="計算機">${$("btnCalc").innerHTML}</button>`;
+var CALC_BTN = `<button type="button" class="calcBtn" title="計算機" aria-label="計算機">${$("btnCalc").querySelector("svg").outerHTML}<span>計算機</span></button>`;
 const CALC_HIST_KEY = "floorplan-calc-hist";
 const calc = { expr: "", justEq: false, target: null, fromField: false, hist: [] };
 try { calc.hist = JSON.parse(localStorage.getItem(CALC_HIST_KEY)) || []; } catch (e) { calc.hist = []; }
@@ -5441,11 +5453,13 @@ const calcTargetAlive = () => calc.target && calc.target.isConnected && calc.tar
 function calcRender(errMsg) {
   const out = $("calcOut");
   out.classList.toggle("err", !!errMsg);
-  if (errMsg) { out.textContent = errMsg; }
-  else if (calc.justEq || !hasMathOp(calc.expr)) { out.textContent = calc.expr || "0"; }
-  else { const r = evalMath(calc.expr); out.textContent = r !== null ? fmtCalc(r) : (calc.expr.match(/[\d.]+$/) || ["…"])[0]; }
-  // 上面那行：打算式時顯示整串算式；按了＝之後顯示「算式 =」
-  $("calcExpr").textContent = calc.justEq ? calc.lastExpr ? calc.lastExpr + " =" : "" : hasMathOp(calc.expr) ? calc.expr : "";
+  // 大字：打什麼就顯示什麼（還沒按＝不會先算）；按了＝才換成答案
+  // 上面小字：按了＝之後顯示剛剛的算式「85+120+60 =」
+  const txt = errMsg || calc.expr || "0";
+  out.textContent = txt;
+  out.style.fontSize = errMsg ? "" : txt.length > 16 ? "20px" : txt.length > 11 ? "26px" : "";
+  out.scrollLeft = out.scrollWidth;   // 算式太長：看得到最後打的那幾個字
+  $("calcExpr").textContent = calc.justEq && calc.lastExpr ? calc.lastExpr + " =" : "";
   $("calcHist").innerHTML = calc.hist.map((h, i) => `<div class="hRow"><button class="hUse" data-h="${i}"><span>${escapeXml(h.e)}</span><b>${escapeXml(h.r)}</b></button><button class="hDel" data-del="${i}" aria-label="刪除這筆">×</button></div>`).join("");
   $("calcHistWrap").classList.toggle("has", calc.hist.length > 0);
   const alive = calcTargetAlive();
@@ -5614,6 +5628,27 @@ addEventListener("resize", () => {
   el.style.top = Math.max(8, Math.min(innerHeight - el.offsetHeight - 8, parseFloat(el.style.top))) + "px";
 });
 
+/* ---------- 公告 ----------
+   要公告什麼改這裡就好；不需要公告時改成 null。
+   id 換新的＝之前按過「×」的人也會再看到一次。
+   會出現在：首頁（可以按 × 關掉）、使用說明最上面、新手教學第一步。 */
+const NOTICE = {
+  id: "2026-11-tutorial",
+  text: "教學影片正在更新中，有些畫面可能跟現在不太一樣，可以先自己摸索看看。有問題直接 LINE 我（Evan）！",
+};
+const NOTICE_KEY = "floorplan-notice-closed";
+function refreshNotice() {
+  let closed = ""; try { closed = localStorage.getItem(NOTICE_KEY) || ""; } catch (e) { /* 讀不到就當沒關過 */ }
+  $("libNotice").hidden = !NOTICE || closed === NOTICE.id;
+  $("helpNotice").hidden = !NOTICE;
+  if (NOTICE) { $("libNoticeText").textContent = NOTICE.text; $("helpNoticeText").textContent = NOTICE.text; }
+}
+$("libNoticeX").addEventListener("click", () => {
+  try { localStorage.setItem(NOTICE_KEY, NOTICE.id); } catch (e) { /* 存不了就算了 */ }
+  refreshNotice();
+});
+refreshNotice();
+
 // 點 LINE ID 就複製，業務可以直接貼到 LINE 搜尋加好友
 document.querySelectorAll(".lineCopy").forEach((b) => b.addEventListener("click", async () => {
   const id = b.dataset.line;
@@ -5729,8 +5764,13 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08.5";
+const APP_VERSION = "2026.11.08.6";
 const CHANGELOG = [
+  ["2026.11.08.6", [
+    "首頁和使用說明加上公告：教學影片正在更新中",
+    "計算機改成跟一般計算機一樣：打的時候顯示打了什麼，按「＝」才出現答案",
+    "計算機按鈕更好認：上方工具列和尺寸框旁邊都寫上「計算機」",
+  ]],
   ["2026.11.08.5", [
     "計算機的紀錄可以刪除：每筆右邊有 ×，上面有「全部清除」",
     "沒打數字就按換算不會再留下「0 坪」的紀錄",
