@@ -336,7 +336,7 @@
   .dimField { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; font-size: 16px; }
   .dimField label { flex: 1; }
   .dimField input {
-    width: 130px; font: inherit; font-size: 20px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px; background: var(--ground);
+    width: 170px; font: inherit; font-size: 20px; padding: 8px 12px; border: 1px solid transparent; border-radius: 12px; background: var(--ground);
     text-align: right; -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; color: var(--ink);
   }
   .dimField input:focus { outline: none; background: #fff; border-color: var(--sel); box-shadow: 0 0 0 3px var(--selSoft); }
@@ -481,11 +481,11 @@
   #lenPop { position: absolute; z-index: 4; display: none; align-items: center; gap: 6px; padding: 6px 6px 6px 10px;
     background: #fff; border-radius: 14px; box-shadow: var(--floatHi); }
   #lenPop.show { display: flex; animation: popIn .18s cubic-bezier(.2,.9,.25,1); }
-  #lenIn { width: 78px; height: 38px; font: inherit; font-size: 20px; font-weight: 600; text-align: right; padding: 0 8px; border: 1.5px solid var(--sel);
+  #lenIn { width: 96px; height: 38px; font: inherit; font-size: 20px; font-weight: 600; text-align: right; padding: 0 8px; border: 1.5px solid var(--sel);
     border-radius: 10px; color: var(--ink); background: #fff; -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; }
   #lenIn:focus { outline: none; box-shadow: 0 0 0 3px var(--selSoft); }
   #lenUnit { font-size: 14px; color: var(--ink2); }
-  #lenIn2 { width: 78px; height: 38px; font: inherit; font-size: 20px; font-weight: 600; text-align: right; padding: 0 8px; border: 1.5px solid var(--sel);
+  #lenIn2 { width: 96px; height: 38px; font: inherit; font-size: 20px; font-weight: 600; text-align: right; padding: 0 8px; border: 1.5px solid var(--sel);
     border-radius: 10px; color: var(--ink); background: #fff; -webkit-user-select: text; user-select: text; font-variant-numeric: tabular-nums; }
   #lenIn2:focus { outline: none; box-shadow: 0 0 0 3px var(--selSoft); }
   #lenPop .lenTag { font-size: 14px; color: var(--ink2); white-space: nowrap; }
@@ -502,6 +502,60 @@
     opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.2,.9,.25,1); pointer-events: none; white-space: nowrap;
   }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
+  /* ===== 新手教學 ===== */
+  #tour { position: fixed; inset: 0; z-index: 95; display: none; }
+  #tour.show { display: block; }
+  /* 聚光燈：一個透明方框，外面用超大的影子把畫面調暗 */
+  #tourSpot { position: fixed; border-radius: 14px; box-shadow: 0 0 0 9999px rgba(18,24,40,0.58), 0 0 0 3px var(--sel) inset;
+    transition: left .3s cubic-bezier(.2,.9,.25,1), top .3s cubic-bezier(.2,.9,.25,1), width .3s, height .3s; pointer-events: none; }
+  #tourSpot.none { left: 50% !important; top: 40% !important; width: 0 !important; height: 0 !important; box-shadow: 0 0 0 9999px rgba(18,24,40,0.58); }
+  #tourCard { position: fixed; width: min(400px, calc(100vw - 24px)); background: #fff; border-radius: 20px; box-shadow: var(--floatHi); overflow: hidden;
+    transition: left .3s cubic-bezier(.2,.9,.25,1), top .3s cubic-bezier(.2,.9,.25,1); }
+  .tourMedia:empty { display: none; }
+  .tourMedia video { display: block; width: 100%; height: auto; background: var(--ground); border-bottom: 1px solid var(--line); }
+  .tourMedia .gestures { padding: 14px 14px 0; }
+  .tourBody { padding: 14px 18px 4px; }
+  .tourStep { font-size: 12px; font-weight: 700; color: var(--sel); margin-bottom: 4px; font-variant-numeric: tabular-nums; }
+  #tourTitle { margin: 0 0 6px; font-size: 19px; }
+  #tourText { margin: 0; font-size: 15px; line-height: 1.6; color: var(--ink2); }
+  #tourText b { color: var(--ink); }
+  .tourNav { display: flex; align-items: center; gap: 8px; padding: 12px 14px 14px; }
+  .tourNav .sp { flex: 1; }
+  .tourNav .btn { height: 40px; }
+  .tourSkip { border: none; background: transparent; color: var(--ink2); font-size: 14px; padding: 6px 4px; }
+  /* 使用說明 */
+  .helpDlg { width: min(760px, 100%); }
+  .helpTop { margin: 4px 0 14px; }
+  .helpList { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+  .helpItem { background: var(--ground); border-radius: 14px; overflow: hidden; }
+  .helpItem video { display: block; width: 100%; aspect-ratio: 4 / 3; object-fit: cover; object-position: top left; background: #fff; cursor: pointer; }
+  .helpItem > b { display: block; padding: 10px 12px 2px; font-size: 15px; }
+  .helpItem > span { display: block; padding: 0 12px 12px; font-size: 13px; color: var(--ink2); line-height: 1.5; }
+  .helpItem > span b { color: var(--ink); }
+  .helpH { margin: 22px 0 10px; font-size: 13px; color: var(--ink2); }
+  /* 手勢小動畫 */
+  .gestures { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .gest { background: var(--ground); border-radius: 12px; padding: 8px 6px 10px; text-align: center; font-size: 12px; color: var(--ink2); line-height: 1.4; }
+  .gest b { display: block; color: var(--ink); font-size: 13px; }
+  .gest svg { width: 64px; height: 52px; display: block; margin: 0 auto 4px; }
+  .gest .f { fill: var(--sel); opacity: .85; }
+  .gest .tap .f { animation: gTap 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes gTap { 0%, 60%, 100% { transform: scale(1); opacity: .85; } 20% { transform: scale(.7); opacity: 1; } }
+  .gest .pinch .a { animation: gPinchA 2s ease-in-out infinite; }
+  .gest .pinch .b { animation: gPinchB 2s ease-in-out infinite; }
+  @keyframes gPinchA { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(-12px, 8px); } }
+  @keyframes gPinchB { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(12px, -8px); } }
+  .gest .drag .f { animation: gDrag 2s ease-in-out infinite; }
+  @keyframes gDrag { 0%, 100% { transform: translateX(-14px); } 50% { transform: translateX(14px); } }
+
+  /* 算式按鈕列：在鍵盤正上方 */
+  #mathKeys { position: fixed; left: 50%; transform: translateX(-50%); bottom: 12px; z-index: 90; display: none; align-items: center; gap: 4px;
+    padding: 6px; background: #fff; border-radius: 16px; box-shadow: var(--floatHi); max-width: calc(100vw - 16px); }
+  #mathKeys.show { display: flex; }
+  #mathKeys button { width: 46px; height: 42px; border: none; background: var(--ground); border-radius: 11px; font-size: 20px; font-weight: 600; color: var(--ink); padding: 0; }
+  #mathKeys button.eq { background: var(--sel); color: #fff; }
+  #mathRes { min-width: 90px; padding: 0 10px; font-size: 16px; font-weight: 600; color: var(--sel); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  #mathRes:empty::before { content: "可以打算式"; color: var(--ink2); font-weight: 400; font-size: 13px; }
   #libToast { position: fixed; left: 50%; bottom: 28px; transform: translate(-50%, 6px); z-index: 80; background: var(--navy); color: #fff; padding: 10px 18px; border-radius: 14px; font-size: 14px; box-shadow: var(--floatHi); opacity: 0; transition: opacity .2s, transform .25s; pointer-events: none; white-space: nowrap; }
   #libToast.show { opacity: 1; transform: translate(-50%, 0); }
   #app.tb-bottom #toast { bottom: 146px; }
@@ -572,6 +626,7 @@
   </header>
   <!-- 「更多」選單：不常用、比較危險的動作收在這裡 -->
   <div class="popMenu" id="moreMenu">
+    <button id="btnHelpMenu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>使用說明（示範短片）</button>
     <button id="btnNew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新平面圖（開新分頁）</button>
     <hr>
     <button id="btnClear" class="danger"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>清除畫面</button>
@@ -726,9 +781,9 @@
     <!-- 照比例模式：畫完直線跳出的長度輸入框 -->
     <form id="lenPop" autocomplete="off">
       <span class="lenTag" id="lenTag1">寬</span>
-      <input id="lenIn" type="text" inputmode="decimal" enterkeyhint="next" aria-label="線的長度">
+      <input id="lenIn" class="mathInput" type="text" inputmode="decimal" enterkeyhint="next" aria-label="線的長度">
       <span class="lenTag" id="lenTag2">×　深</span>
-      <input id="lenIn2" type="text" inputmode="decimal" enterkeyhint="done" aria-label="矩形的深">
+      <input id="lenIn2" class="mathInput" type="text" inputmode="decimal" enterkeyhint="done" aria-label="矩形的深">
       <span id="lenUnit">cm</span>
       <label class="lenLab"><input type="checkbox" id="lenLabel">標尺寸</label>
       <button type="submit" class="btn primary" id="lenOk">確定</button>
@@ -847,6 +902,7 @@
       <div class="setRow"><span>丈量手帳<small>開發者 Evan｜有問題、壞掉或想加功能都可以找我</small></span>
         <button class="lineCopy" data-line="32466038">LINE ID：32466038<span>複製</span></button></div>
       <div class="setRow" style="margin:6px 0 0"><span>Email</span><a class="mail" href="mailto:fanxuan89222@gmail.com" style="font-size:13px">fanxuan89222@gmail.com</a></div>
+      <div class="setRow" style="margin:10px 0 0"><span>使用說明<small>每個功能的示範短片、新手教學</small></span><button class="btn" id="btnHelp">打開</button></div>
       <div class="setRow" style="margin:10px 0 0"><span>版本 <b id="verText"></b></span><button class="btn" id="btnNews">看更新說明</button></div>
     </section>
 
@@ -893,6 +949,45 @@
     <div class="sheetList" id="sheetList"></div>
     <div class="row"><button class="btn" id="sheetClose">取消</button></div>
   </div>
+</div>
+
+<!-- 新手教學：聚光燈＋說明卡 -->
+<div id="tour">
+  <div id="tourSpot"></div>
+  <div id="tourCard" role="dialog" aria-live="polite">
+    <div class="tourMedia" id="tourMedia"></div>
+    <div class="tourBody">
+      <div class="tourStep" id="tourStep"></div>
+      <h3 id="tourTitle"></h3>
+      <p id="tourText"></p>
+    </div>
+    <div class="tourNav">
+      <button type="button" class="tourSkip" id="tourSkip">跳過教學</button>
+      <span class="sp"></span>
+      <button type="button" class="btn" id="tourPrev">上一步</button>
+      <button type="button" class="btn primary" id="tourNext">下一步</button>
+    </div>
+  </div>
+</div>
+
+<!-- 使用說明：所有示範短片 -->
+<div class="modal" id="helpModal">
+  <div class="dialog helpDlg">
+    <div class="dlgHead"><h3>使用說明</h3><button class="dlgX" data-for="helpClose" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
+    <div class="helpTop"><button class="btn primary" id="helpTour">重新跑一次新手教學</button></div>
+    <div id="helpList" class="helpList"></div>
+    <h4 class="helpH">手勢</h4>
+    <div id="helpGestures" class="gestures"></div>
+    <div class="row"><button class="btn" id="helpClose">關閉</button></div>
+  </div>
+</div>
+
+<!-- 打尺寸時的算式按鈕列（貼在鍵盤上方） -->
+<div id="mathKeys">
+  <span id="mathRes"></span>
+  <button type="button" data-k="+">＋</button><button type="button" data-k="-">−</button><button type="button" data-k="×">×</button><button type="button" data-k="÷">÷</button>
+  <button type="button" data-k="(">(</button><button type="button" data-k=")">)</button>
+  <button type="button" data-k="=" class="eq">＝</button>
 </div>
 
 <!-- 更新說明（有新版本時自動跳出；設定→關於 也能打開） -->
@@ -1859,8 +1954,33 @@ function freeDimCovers(it, i) {
   }
   return false;
 }
-// 尺寸數字整理：「10.」→「10」、「.5」→「0.5」、全形數字轉半形
+/* ---------- 尺寸框裡的算式 ----------
+   可以打 85+120+60、300-12、(120+30)×2、240÷2；全形符號、x、* 、/ 都可以。
+   自己逐字解析（不用 eval），只認得數字、小數點、＋－×÷ 和括號。算不出來就回傳 null。 */
+function evalMath(str) {
+  const src = String(str).replace(/[０-９．＋－（）]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0))
+    .replace(/[×xX＊*]/g, "*").replace(/[÷／/]/g, "/").replace(/[−–—]/g, "-").replace(/\s+/g, "");
+  if (!src || !/^[\d.+\-*/()]+$/.test(src)) return null;
+  let i = 0;
+  const peek = () => src[i];
+  function num() {
+    if (peek() === "(") { i++; const v = expr(); if (peek() !== ")") throw 0; i++; return v; }
+    if (peek() === "-") { i++; return -num(); }
+    const m = /^\d*\.?\d+|^\d+\.?/.exec(src.slice(i));
+    if (!m) throw 0;
+    i += m[0].length;
+    return parseFloat(m[0]);
+  }
+  function term() { let v = num(); while (peek() === "*" || peek() === "/") { const op = src[i++]; const r = num(); v = op === "*" ? v * r : v / r; } return v; }
+  function expr() { let v = term(); while (peek() === "+" || peek() === "-") { const op = src[i++]; const r = term(); v = op === "+" ? v + r : v - r; } return v; }
+  try { const v = expr(); return i === src.length && isFinite(v) ? v : null; } catch (e) { return null; }
+}
+const hasMathOp = (v) => /\d\s*[+＋\-－−×xX*＊÷/／]\s*[\d(（]|[()（）]/.test(String(v));
+// 數字顯示：最多一位小數，去掉多餘的 0
+const fmtNum = (n) => String(Math.round(n * 10) / 10);
+// 尺寸數字整理：算式算出結果、「10.」→「10」、「.5」→「0.5」、全形數字轉半形
 function cleanDimValue(v) {
+  if (hasMathOp(v)) { const r = evalMath(v); if (r !== null && r > 0) return fmtNum(r); }
   v = String(v).trim().replace(/[０-９．]/g, (c) => String.fromCharCode(c.charCodeAt(0) - 0xfee0));
   if (/^\d*\.?\d*$/.test(v)) { v = v.replace(/\.$/, ""); if (v.startsWith(".")) v = "0" + v; }
   return v;
@@ -2082,6 +2202,24 @@ function render() {
   renderOverlay();
 }
 
+// 符號、圖片的拉伸把手：四個角（方形，等比例）＋四邊中間（圓形，只拉一個方向）
+// 符號在畫面上太小時（某一邊不到 64 像素）就不放那個方向的邊把手，免得擠在一起點不到
+function boxHandles(W, H, pad, hr, sw, z) {
+  const xs = { w: -pad, c: W / 2, e: W + pad }, ys = { n: -pad, c: H / 2, s: H + pad };
+  let out = "";
+  for (const [d, x, y] of [["nw", xs.w, ys.n], ["ne", xs.e, ys.n], ["sw", xs.w, ys.s], ["se", xs.e, ys.s]]) {
+    out += `<rect data-handle="resize" data-dir="${d}" x="${x - hr}" y="${y - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}" fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>`;
+  }
+  const edges = [];
+  if (W * z >= 64) edges.push(["s", xs.c, ys.s]);   // 上邊中間留給旋轉把手的線，所以只放下面
+  if (H * z >= 64) edges.push(["w", xs.w, ys.c], ["e", xs.e, ys.c]);
+  if (W * z >= 64) edges.push(["n", xs.c, ys.n]);
+  for (const [d, x, y] of edges) {
+    out += `<circle data-handle="resize" data-dir="${d}" cx="${x}" cy="${y}" r="${hr * 0.78}" fill="#fff" stroke="${SELC}" stroke-width="${sw * 1.6}"/>`;
+  }
+  return out;
+}
+
 // 選取框與控制點
 function renderOverlay() {
   const it = doc.items.find((i) => i.id === ui.selectedId);
@@ -2097,7 +2235,7 @@ function renderOverlay() {
   if (it.type === "img") $("selOpacity").textContent = `透明度 ${Math.round((it.opacity ?? 1) * 100)}%`;
   $("selRotate").style.display = isSym || isText ? "" : "none";
   $("selFlip").style.display = isSym ? "" : "none";
-  $("selFree").style.display = isSym ? "" : "none";
+  $("selFree").style.display = "none";   // 改成四角＋四邊把手後，不用再切換自由拉伸
   $("selFree").classList.toggle("on", ui.freeStretch);
   $("selEdit").style.display = isText || isShapeBox(it) ? "" : "none";
   $("selEdit").lastChild.textContent = isShapeBox(it) ? (it.text ? "編輯框內文字" : "框內加文字") : "編輯文字";
@@ -2132,8 +2270,7 @@ function renderOverlay() {
         <line x1="${W / 2}" y1="${-pad}" x2="${W / 2}" y2="${-pad - 30 / z}" stroke="${SELC}" stroke-width="${sw}"/>
         <circle data-handle="rotate" cx="${W / 2}" cy="${-pad - 30 / z}" r="${hr}" fill="#fff" stroke="${SELC}" stroke-width="${sw * 1.5}"/>
         <path d="M${W / 2 - hr * 0.45} ${-pad - 30 / z} a${hr * 0.45} ${hr * 0.45} 0 1 1 ${hr * 0.45} ${hr * 0.45}" fill="none" stroke="${SELC}" stroke-width="${sw}" pointer-events="none"/>
-        <rect data-handle="resize" x="${W + pad - hr}" y="${H + pad - hr}" width="${hr * 2}" height="${hr * 2}" rx="${hr * 0.4}"
-          fill="${SELC}" stroke="#fff" stroke-width="${sw}"/>
+        ${boxHandles(W, H, pad, hr, sw, z)}
       </g>`;
   } else {
     const el = contentG.querySelector(`[data-id="${it.id}"]`);
@@ -2348,7 +2485,7 @@ function hitTest(clientX, clientY) {
   // 找出手指底下的物件或控制點
   const els = document.elementsFromPoint(clientX, clientY);
   for (const el of els) {
-    if (el.dataset && el.dataset.handle) return { handle: el.dataset.handle };
+    if (el.dataset && el.dataset.handle) return { handle: el.dataset.handle, dir: el.dataset.dir };
     const g = el.closest && el.closest("[data-id]");
     if (g && contentG.contains(g)) return { id: Number(g.dataset.id) };
   }
@@ -2413,7 +2550,7 @@ stage.addEventListener("pointerdown", (e) => {
       // 手指拉選取框的控制點：縮放／旋轉
       const snapshot = JSON.stringify(doc);
       pushUndo();
-      action = { type: hit.handle, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
+      action = { type: hit.handle, dir: hit.dir, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
       return;
     }
     if (hit && hit.id) {
@@ -2451,7 +2588,7 @@ stage.addEventListener("pointerdown", (e) => {
     if (hit && hit.handle && sel) {
       const snapshot = JSON.stringify(doc);
       pushUndo();
-      action = { type: hit.handle, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
+      action = { type: hit.handle, dir: hit.dir, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
       return;
     }
     if (!canDrawOnActive()) return;
@@ -2477,7 +2614,7 @@ stage.addEventListener("pointerdown", (e) => {
   if (hit && hit.handle && sel) {
     const snapshot = JSON.stringify(doc);
     pushUndo();
-    action = { type: hit.handle, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
+    action = { type: hit.handle, dir: hit.dir, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
     return;
   }
   if (hit && hit.id) {
@@ -2911,24 +3048,33 @@ function resizeItem(a, wx, wy) {
     return;
   }
   if (!isBox(it)) return;
+  // 拉哪個把手，對面就固定不動：
+  //   四個角＝等比例放大縮小；四邊中間＝只改那個方向（拉長浴缸、加長流理台）
+  const dir = a.dir || "se";
+  const dx = dir.includes("e") ? 1 : dir.includes("w") ? -1 : 0;
+  const dy = dir.includes("s") ? 1 : dir.includes("n") ? -1 : 0;
   const [cx, cy] = symCenter(s);
-  // 把手指位置轉回「符號沒旋轉」的座標，算出新的半寬半高
-  const rad = (-s.rot * Math.PI) / 180;
-  const lx = (wx - cx) * Math.cos(rad) - (wy - cy) * Math.sin(rad);
-  const ly = (wx - cx) * Math.sin(rad) + (wy - cy) * Math.cos(rad);
+  const [W0, H0] = symSize(s);
   const [baseW, baseH] = baseSize(it);
-  if (ui.freeStretch) {
-    it.sx = Math.max(0.15, (2 * Math.abs(lx)) / baseW);
-    it.sy = Math.max(0.15, (2 * Math.abs(ly)) / baseH);
-  } else {
-    // 鎖定比例：用對角線距離算縮放倍率
-    const d0 = Math.hypot(baseW * s.sx, baseH * s.sy) / 2;
-    const k = Math.max(0.15 / Math.min(s.sx, s.sy), Math.hypot(lx, ly) / d0);
-    it.sx = s.sx * k; it.sy = s.sy * k;
-  }
-  // 以中心點為準縮放，位置不會跑掉
-  const [W, H] = symSize(it);
-  it.x = cx - W / 2; it.y = cy - H / 2;
+  const rot = (s.rot * Math.PI) / 180;
+  // 手指位置轉成「符號沒旋轉、中心在原點」的座標
+  const lx = (wx - cx) * Math.cos(-rot) - (wy - cy) * Math.sin(-rot);
+  const ly = (wx - cx) * Math.sin(-rot) + (wy - cy) * Math.cos(-rot);
+  const ax = -dx * W0 / 2, ay = -dy * H0 / 2;   // 固定不動的那一點（對角或對邊）
+  const minW = baseW * 0.15, minH = baseH * 0.15;
+  let W = W0, H = H0;
+  if (dx && dy) {
+    // 角：沿著對角線方向算倍率，長寬一起變
+    const k = ((lx - ax) * dx * W0 + (ly - ay) * dy * H0) / (W0 * W0 + H0 * H0);
+    const kk = Math.max(k, minW / W0, minH / H0);
+    W = W0 * kk; H = H0 * kk;
+  } else if (dx) W = Math.max(minW, (lx - ax) * dx);
+  else H = Math.max(minH, (ly - ay) * dy);
+  // 新的中心（還是在沒旋轉的座標），再轉回圖上的座標
+  const ncx = ax + (dx ? dx * W / 2 : 0), ncy = ay + (dy ? dy * H / 2 : 0);
+  const gx = cx + ncx * Math.cos(rot) - ncy * Math.sin(rot), gy = cy + ncx * Math.sin(rot) + ncy * Math.cos(rot);
+  it.sx = W / baseW; it.sy = H / baseH;
+  it.x = gx - W / 2; it.y = gy - H / 2;
 }
 
 function rotateItem(a, wx, wy) {
@@ -3260,7 +3406,7 @@ function openDimDialog(it, groups, opts = {}) {
     const a0 = it.pts[g.segs[0]], b0 = it.pts[g.segs[0] + 1];
     const nowLen = lenText(Math.hypot(b0[0] - a0[0], b0[1] - a0[1]));
     const val = cur || (scaleOn() ? nowLen : "");   // 照比例模式：先帶入目前長度，剛好就直接確定
-    row.innerHTML = `<label>${g.label}</label><input type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(val)}"><span class="u">${unit}</span>`;
+    row.innerHTML = `<label>${g.label}</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(val)}"><span class="u">${unit}</span>`;
     const inp = row.querySelector("input");
     inp.addEventListener("keydown", (e) => {
       if (e.key !== "Enter") return;
@@ -3382,7 +3528,7 @@ function openFreeDim(it, isNew) {
   $("dimTitle").textContent = isNew ? "自由標註" : "修改標註";
   $("dimHint").textContent = `單位：${UNIT_NAME[unit]}（${unit}）`;
   const auto = isNew && scaleOn() ? lenText(Math.hypot(it.x2 - it.x1, it.y2 - it.y1)) : "";
-  $("dimFields").innerHTML = `<div class="dimField"><label>距離</label><input type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(it.v || auto)}"><span class="u">${unit}</span></div>`;
+  $("dimFields").innerHTML = `<div class="dimField"><label>距離</label><input class="mathInput" type="text" inputmode="decimal" autocomplete="off" value="${escapeXml(it.v || auto)}"><span class="u">${unit}</span></div>`;
   const inp = $("dimFields").querySelector("input");
   inp.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); closeDim(true); } });
   $("dimFlip").style.display = "";
@@ -3891,7 +4037,8 @@ const scaleOn = () => !!(doc.scale && doc.scale.on) && doc.mode !== "sketch";   
 const scaleStep = () => ((doc.scale && doc.scale.step) || 5) * PX_PER_CM;   // 畫布單位
 // 使用者輸入的數字（依單位）→ 公分
 function toCm(v) {
-  const n = parseFloat(String(v).replace(/[^\d.]/g, ""));
+  const m = evalMath(v);   // 算式也可以（85+120+60）
+  const n = m !== null ? m : parseFloat(String(v).replace(/[^\d.]/g, ""));
   if (!isFinite(n) || n <= 0) return null;
   const u = doc.meta.unit || "cm";
   return u === "mm" ? n / 10 : u === "m" ? n * 100 : n;
@@ -4764,6 +4911,7 @@ function loadTab(i) {
   updateUndoButtons();
   renderTabs();
   savePrefs();
+  maybeStartTour();
 }
 async function openDoc(id) {
   const idx = tabs.findIndex((t) => t.rec.id === id);
@@ -4982,6 +5130,161 @@ function folderMenu(f, folders, docs) {
   ]);
 }
 $("libNewDoc").addEventListener("click", () => createDoc(libFolder));
+/* ===================== 新手教學與使用說明 =====================
+   教學：一步一步把要介紹的按鈕「打亮」，旁邊是說明卡（有示範短片）。
+   第一次進入畫圖畫面時自動跑一次；之後在「⋯」選單或設定的「使用說明」可以重看。
+   示範短片是 tip-*.mp4（跟 index.html 放在同一個資料夾）。 */
+const GESTURES_HTML = `
+  <div class="gest"><svg viewBox="0 0 64 52" class="tap"><circle class="f" cx="24" cy="26" r="9"/><circle class="f" cx="42" cy="22" r="9"/></svg><b>兩指點一下</b>復原</div>
+  <div class="gest"><svg viewBox="0 0 64 52" class="tap"><circle class="f" cx="16" cy="28" r="8"/><circle class="f" cx="32" cy="20" r="8"/><circle class="f" cx="48" cy="26" r="8"/></svg><b>三指點一下</b>重做</div>
+  <div class="gest"><svg viewBox="0 0 64 52" class="pinch"><circle class="f a" cx="24" cy="30" r="8"/><circle class="f b" cx="40" cy="22" r="8"/></svg><b>兩指捏合</b>放大縮小</div>
+  <div class="gest"><svg viewBox="0 0 64 52" class="drag"><circle class="f" cx="32" cy="26" r="9"/></svg><b>手指拖曳</b>移動畫面（筆畫圖）</div>`;
+const TIPS = [
+  { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的底稿讓你描。", target: "#modeSeg" },
+  { id: "straighten", title: "按住拉直", text: "畫完<b>先別放開筆</b>，停 0.5 秒：歪歪的線會變直線，畫一圈會變成方正的矩形。", target: '[data-tool="pen"]' },
+  { id: "room", title: "牆壁筆畫房間", text: "牆壁筆像立可帶。畫一個矩形就是房間，畫小方塊就是柱子。照比例模式下畫完可以直接打<b>寬×深</b>。", target: '[data-tool="wall"]' },
+  { id: "dims", title: "標尺寸", text: "點「?」輸入這段的長度，或從一點拉到另一點。可以直接打算式，例如 <b>85+120+60</b>。", target: '[data-tool="dim"]' },
+  { id: "symbols", title: "放符號", text: "下面的符號點一下就放進圖裡。拖<b>四個角</b>等比例縮放、拖<b>四邊</b>只拉長，上面的圓點旋轉。", target: "#tray" },
+  { id: "text", title: "打字", text: "用文字工具<b>點哪裡就在哪裡打字</b>，常用字在下面。選取後可以旋轉。", target: '[data-tool="text"]' },
+];
+const TIP_H = { sketch: 560, straighten: 584, room: 584, dims: 614, symbols: 570, text: 520 };   // 每支短片的高度（寬都是 760）
+const TOUR = [
+  { title: "歡迎使用丈量手帳", text: "花 1 分鐘看看怎麼用。每一步都有示範短片，隨時可以按「跳過教學」。", target: null },
+  ...TIPS.map((t) => ({ ...t, video: "tip-" + t.id + ".mp4", vw: 760, vh: TIP_H[t.id] })),
+  { title: "手勢", text: "這幾個手勢很常用，記起來畫圖會快很多。", target: null, gestures: true },
+  { title: "匯出給製圖員", text: "畫完按這裡，圖片可以直接用 LINE 或 AirDrop 傳出去。", target: "#btnExport" },
+  { title: "設定和使用說明", text: "照比例模式、紙張大小、主題顏色都在<b>設定</b>裡。這份教學和示範短片之後可以在「⋯」→「使用說明」重看。", target: "#btnSettings" },
+];
+const TOUR_KEY = "floorplan-tour-done";
+let tourIdx = -1;
+function startTour() {
+  closeMore(); $("helpModal").classList.remove("show"); $("settingsModal").classList.remove("show");
+  if (doc.mode === "sketch") setMode("fine");   // 教學要看到全部的工具
+  if (ui.trayCollapsed) { setTrayCollapsed(false); buildTray(); }
+  ui.selectedId = null; renderOverlay();
+  tourIdx = 0; $("tour").classList.add("show"); showTourStep();
+}
+function endTour() {
+  $("tour").classList.remove("show"); $("tourMedia").innerHTML = ""; tourIdx = -1;
+  try { localStorage.setItem(TOUR_KEY, "1"); } catch (e) {}
+}
+function showTourStep() {
+  const st = TOUR[tourIdx];
+  $("tourStep").textContent = `${tourIdx + 1} / ${TOUR.length}`;
+  $("tourTitle").textContent = st.title;
+  $("tourText").innerHTML = st.text;
+  $("tourMedia").innerHTML = st.video
+    ? `<video src="${st.video}" width="${st.vw}" height="${st.vh}" autoplay muted loop playsinline preload="auto" poster="${st.video.replace(".mp4", ".jpg")}"></video>`
+    : st.gestures ? `<div class="gestures">${GESTURES_HTML}</div>` : "";
+  $("tourPrev").style.visibility = tourIdx ? "" : "hidden";
+  $("tourNext").textContent = tourIdx === TOUR.length - 1 ? "開始畫圖" : tourIdx === 0 ? "開始" : "下一步";
+  placeTour();
+}
+// 聚光燈套在目標按鈕上；說明卡放在旁邊放得下的地方（工具列右邊、上方按鈕下面、符號列上面）
+function placeTour() {
+  if (tourIdx < 0) return;
+  const st = TOUR[tourIdx], spot = $("tourSpot"), card = $("tourCard");
+  const el = st.target && document.querySelector(st.target);
+  const r = el && el.getBoundingClientRect();
+  const vw = window.innerWidth, vh = window.innerHeight, cw = card.offsetWidth, ch = card.offsetHeight, m = 12;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  if (!r || !r.width) {
+    spot.classList.add("none");
+    card.style.left = (vw - cw) / 2 + "px"; card.style.top = Math.max(m, (vh - ch) / 2) + "px";
+    return;
+  }
+  spot.classList.remove("none");
+  const pad = 6;
+  spot.style.left = r.left - pad + "px"; spot.style.top = r.top - pad + "px";
+  spot.style.width = r.width + pad * 2 + "px"; spot.style.height = r.height + pad * 2 + "px";
+  let x, y;
+  if (r.right + 18 + cw < vw && r.width < vw * 0.4 && r.height < vh * 0.5 && r.left < vw * 0.5) {   // 放右邊
+    x = r.right + 18; y = clamp(r.top + r.height / 2 - ch / 2, m, vh - ch - m);
+  } else if (r.top > vh * 0.55) {   // 放上面
+    x = clamp(r.left + r.width / 2 - cw / 2, m, vw - cw - m); y = Math.max(m, r.top - ch - 16);
+  } else {   // 放下面
+    x = clamp(r.left + r.width / 2 - cw / 2, m, vw - cw - m); y = clamp(r.bottom + 16, m, vh - ch - m);
+  }
+  card.style.left = x + "px"; card.style.top = y + "px";
+}
+$("tourNext").addEventListener("click", () => { if (tourIdx >= TOUR.length - 1) endTour(); else { tourIdx++; showTourStep(); } });
+$("tourPrev").addEventListener("click", () => { if (tourIdx > 0) { tourIdx--; showTourStep(); } });
+$("tourSkip").addEventListener("click", endTour);
+window.addEventListener("resize", placeTour);
+// 影片載入後卡片會變高，再排一次位置
+$("tourMedia").addEventListener("loadedmetadata", placeTour, true);
+// 第一次進入畫圖畫面時自動開始（等畫面排好；更新說明開著就先不要）
+function maybeStartTour() {
+  let done = false;
+  try { done = !!localStorage.getItem(TOUR_KEY); } catch (e) { done = true; }
+  // 自動測試時不跳（除非測試要測教學本身）
+  try { if (navigator.webdriver && !localStorage.getItem("floorplan-tour-test")) done = true; } catch (e) {}
+  if (done || tourIdx >= 0) return;
+  setTimeout(() => { if (!$("newsModal").classList.contains("show") && !document.body.classList.contains("inLibrary")) startTour(); }, 600);
+}
+// 使用說明
+function openHelp() {
+  closeMore(); $("settingsModal").classList.remove("show");
+  $("helpList").innerHTML = TIPS.map((t) => `<div class="helpItem"><video src="tip-${t.id}.mp4" poster="tip-${t.id}.jpg" muted loop playsinline preload="none"></video><b>${t.title}</b><span>${t.text}</span></div>`).join("");
+  // 點影片才播放（一次只播一支，省電）
+  $("helpList").querySelectorAll("video").forEach((v) => v.addEventListener("click", () => {
+    $("helpList").querySelectorAll("video").forEach((o) => { if (o !== v) o.pause(); });
+    v.paused ? v.play() : v.pause();
+  }));
+  $("helpGestures").innerHTML = GESTURES_HTML;
+  $("helpModal").classList.add("show");
+}
+$("btnHelp").addEventListener("click", openHelp);
+$("btnHelpMenu").addEventListener("click", openHelp);
+$("helpClose").addEventListener("click", () => { $("helpModal").classList.remove("show"); $("helpList").innerHTML = ""; });
+$("helpModal").addEventListener("click", (e) => { if (e.target === $("helpModal")) $("helpClose").click(); });
+$("helpTour").addEventListener("click", () => {
+  $("helpModal").classList.remove("show"); $("helpList").innerHTML = "";
+  if (document.body.classList.contains("inLibrary")) createDoc(libFolder).then(() => setTimeout(startTour, 400));
+  else startTour();
+});
+
+/* ---------- 算式按鈕列 ----------
+   焦點在尺寸輸入框（class="mathInput"）時出現在鍵盤上方；按 ＋−×÷() 插入符號，即時顯示結果，按「＝」換成結果 */
+let mathTarget = null;
+function placeMathKeys() {
+  // iPad 鍵盤打開時，visualViewport 會變矮：按鈕列貼在鍵盤上面
+  const vv = window.visualViewport;
+  const kb = vv ? Math.max(0, window.innerHeight - vv.height - vv.offsetTop) : 0;
+  $("mathKeys").style.bottom = kb + 10 + "px";
+}
+function updateMathRes() {
+  if (!mathTarget) return;
+  const v = mathTarget.value;
+  const r = hasMathOp(v) ? evalMath(v) : null;
+  $("mathRes").textContent = r !== null ? "＝ " + fmtNum(r) : "";
+}
+document.addEventListener("focusin", (e) => {
+  if (!e.target.classList || !e.target.classList.contains("mathInput")) return;
+  mathTarget = e.target;
+  $("mathKeys").classList.add("show"); placeMathKeys(); updateMathRes();
+});
+document.addEventListener("focusout", (e) => {
+  if (e.target !== mathTarget) return;
+  setTimeout(() => { if (document.activeElement !== mathTarget) { $("mathKeys").classList.remove("show"); mathTarget = null; } }, 120);
+});
+document.addEventListener("input", (e) => { if (e.target === mathTarget) updateMathRes(); });
+if (window.visualViewport) { visualViewport.addEventListener("resize", placeMathKeys); visualViewport.addEventListener("scroll", placeMathKeys); }
+$("mathKeys").addEventListener("pointerdown", (e) => e.preventDefault());   // 按按鈕時輸入框不要失去焦點（鍵盤不要收起來）
+$("mathKeys").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b || !mathTarget) return;
+  const t = mathTarget, k = b.dataset.k;
+  if (k === "=") {
+    const r = evalMath(t.value); if (r !== null) t.value = fmtNum(r);
+  } else {
+    // 插在游標的位置
+    const a = t.selectionStart ?? t.value.length, z = t.selectionEnd ?? t.value.length;
+    t.value = t.value.slice(0, a) + k + t.value.slice(z);
+    t.setSelectionRange(a + k.length, a + k.length);
+  }
+  t.focus(); updateMathRes();
+});
+
 // 點 LINE ID 就複製，業務可以直接貼到 LINE 搜尋加好友
 document.querySelectorAll(".lineCopy").forEach((b) => b.addEventListener("click", async () => {
   const id = b.dataset.line;
@@ -5097,8 +5400,13 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08.2";
+const APP_VERSION = "2026.11.08.3";
 const CHANGELOG = [
+  ["2026.11.08.3", [
+    "新手教學：一步一步介紹每個工具，附示範短片（「⋯」→「使用說明」可以重看）",
+    "符號四個角都能拉（對角固定、等比例），拉四邊中間只改一個方向",
+    "打尺寸可以直接打算式：85+120+60、300-12，鍵盤上方有＋−×÷按鈕",
+  ]],
   ["2026.11.08.2", [
     "文字：點哪裡就在哪裡直接打字（像 GoodNotes），常用字在打字框下面",
     "文字可以旋轉：選取後拖上面的圓點，或按「旋轉 90°」",
