@@ -1667,7 +1667,7 @@ const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).sl
 function prefsObj() {
   return { toolbarPos: ui.toolbarPos, wallSizes: ui.wallSizes, wallIdx: ui.wallIdx, penSizes: ui.penSizes, penIdx: ui.penIdx,
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
-    quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill, drawShape: ui.drawShape, penShape: ui.penShape,
+    quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill, 
     trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
     quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer, calcPos: ui.calcPos, layersPos: ui.layersPos,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
@@ -1719,8 +1719,7 @@ function applyPrefs(p) {
   if (p.quickLenLabel === false) ui.quickLenLabel = false;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
-  if (["free", "line", "rect"].includes(p.drawShape)) ui.drawShape = p.drawShape;
-  if (["free", "rect"].includes(p.penShape)) ui.penShape = p.penShape;
+  // 畫法（自由／直線／矩形）不記住：每次打開都從「自由」開始
   if (p.shapeFill) ui.shapeFill = p.shapeFill;
   if (p.shapeWidth) ui.shapeWidth = p.shapeWidth;
 }
@@ -5942,8 +5941,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.09.4";
+const APP_VERSION = "2026.11.09.5";
 const CHANGELOG = [
+  ["2026.11.09.5", [
+    "畫筆、牆壁每次打開都從「自由」開始（直線、矩形用完不會一直記著）",
+  ]],
   ["2026.11.09.4", [
     "選取圖塊時，下面會顯示尺寸（例如 150 × 75 cm），點一下可以直接打寬、深；也可以勾選「在圖上標出尺寸」，匯出時會印出來",
     "自由標註兩端的圓點更明顯；第一次畫完會提示「拖兩端的圓點可以拉長縮短」",
