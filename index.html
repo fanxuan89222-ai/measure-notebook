@@ -611,8 +611,8 @@
   #calcExpr { min-height: 20px; font-size: 15px; color: var(--ink2); word-break: break-all; }
   #calcOut { font-size: 34px; font-weight: 700; line-height: 41px; height: 41px; color: var(--ink); overflow: hidden; white-space: nowrap; }
   #calcOut.err { color: var(--glaze); font-size: 18px; line-height: 41px; }
-  .calcConv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; }
-  .calcConv button { height: 34px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 12.5px; color: var(--ink); padding: 0; white-space: nowrap; }
+  .calcConv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+  .calcConv button { height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 14px; color: var(--ink); padding: 0; white-space: nowrap; }
   .calcConv button:active { background: var(--ground); }
   .calcKeys { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
   .calcKeys button { height: 52px; border: none; border-radius: 13px; background: var(--ground); font-size: 23px; font-weight: 600; color: var(--ink); padding: 0; touch-action: manipulation; }
@@ -1094,7 +1094,7 @@
   </div>
   <div class="calcScreen"><div id="calcExpr"></div><div id="calcOut">0</div></div>
   <div class="calcConv">
-    <button data-cv="tc">台尺→cm</button><button data-cv="ct">cm→台尺</button><button data-cv="pm">坪→m²</button><button data-cv="mp">m²→坪</button>
+    <button data-cv="cp" title="打 長×寬（公分），例如 300×400">公分→坪</button><button data-cv="pm">坪→m²</button><button data-cv="mp">m²→坪</button>
   </div>
   <div class="calcKeys" id="calcKeys">
     <button data-k="C" class="clr">C</button><button data-k="(">(</button><button data-k=")">)</button><button data-k="÷" class="op">÷</button>
@@ -5496,13 +5496,13 @@ $("helpTour").addEventListener("click", () => {
    浮動面板，自己有數字鍵（不用叫 iPad 鍵盤）。按住上面那條可以拖到旁邊，位置會記住。
    ・從尺寸框旁邊的計算機小按鈕打開：下面的大按鈕是「帶入」，算好一按就填回那一格
    ・從上方工具列打開：大按鈕是「複製結果」
-   ・台尺／坪 換算：對目前的數字做換算（1 台尺 = 30.3 cm；1 坪 = 3.30579 m²）
+   ・公分→坪：打「長×寬」（公分）直接換成坪；坪↔m² 換算（1 坪 = 3.30579 m²）
  */
 var CALC_BTN = `<button type="button" class="calcBtn" title="計算機" aria-label="計算機">${$("btnCalc").querySelector("svg").outerHTML}<span>計算機</span></button>`;
 const calc = { expr: "", justEq: false, target: null, fromField: false };
 try { localStorage.removeItem("floorplan-calc-hist"); } catch (e) { /* 舊版的計算紀錄，不用了 */ }
 const CALC_OPS = "+−×÷";
-// 計算機的數字顯示：最多兩位小數（坪數、台尺需要），去掉多餘的 0
+// 計算機的數字顯示：最多兩位小數（坪數需要），去掉多餘的 0
 const fmtCalc = (n) => String(Math.round(n * 100) / 100);
 // 目前的數字：算式就算出來；空白＝0；算不出來＝null
 function calcValue() {
@@ -5557,11 +5557,14 @@ function calcKey(k) {
 function calcConvert(kind) {
   const v = calcValue();
   if (v === null) { calcRender("算式還沒打完"); return; }
-  if (!v) { calcRender("先打數字再換算"); return; }
+  if (!v) { calcRender(kind === "cp" ? "先打 長×寬，例如 300×400" : "先打數字再換算"); return; }
+  // 公分→坪：打「長×寬」（公分），算出面積再換成坪（1 m² = 10000 cm²，1 m² = 0.3025 坪）
+  if (kind === "cp" && !calc.justEq && !calc.expr.includes("×")) { calcRender("請打 長×寬，例如 300×400"); return; }
   const n = v;
-  const T = { tc: [30.3, "台尺", "cm"], ct: [1 / 30.3, "cm", "台尺"], pm: [3.30579, "坪", "m²"], mp: [0.3025, "m²", "坪"] }[kind];
+  const T = { cp: [0.3025 / 10000, "cm²", "坪"], pm: [3.30579, "坪", "m²"], mp: [0.3025, "m²", "坪"] }[kind];
   const r = n * T[0], rs = fmtCalc(r);
-  calc.lastExpr = `${fmtCalc(n)} ${T[1]} → ${T[2]}`; calc.expr = rs; calc.justEq = true;
+  const from = kind === "cp" && !calc.justEq ? `${calc.expr} cm` : `${fmtCalc(n)} ${T[1]}`;
+  calc.lastExpr = `${from} → ${T[2]}`; calc.expr = rs; calc.justEq = true;
   calcRender();
 }
 // 放在哪裡：從輸入框打開＝放在那個框（對話框）旁邊；從工具列打開＝上次拖到的位置
@@ -5806,8 +5809,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.09.2";
+const APP_VERSION = "2026.11.09.3";
 const CHANGELOG = [
+  ["2026.11.09.3", [
+    "計算機拿掉台尺換算，改成「公分→坪」：打 長×寬（公分），例如 300×400，按一下就換成坪數",
+  ]],
   ["2026.11.09.2", [
     "畫筆的畫法只留「自由／矩形」；牆壁一樣有「自由／直線／矩形」",
   ]],
