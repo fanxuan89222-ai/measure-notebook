@@ -110,7 +110,7 @@
   .libFoot .qr { width: 120px; height: 120px; border-radius: 12px; background: #fff; padding: 6px; box-shadow: var(--float); }
   .libFoot .contact { display: flex; flex-direction: column; gap: 4px; line-height: 1.5; }
   .libFoot .contact b { color: var(--ink); font-size: 14px; }
-  .lineAdd { margin-left: 4px; font-size: 12px; font-weight: 600; color: #fff; background: #06c755; border-radius: 6px; padding: 2px 8px; text-decoration: none; }
+  .lineAdd { margin-left: 4px; font-size: 12px; font-weight: 600; color: #fff; background: #06833f; border-radius: 6px; padding: 2px 8px; text-decoration: none; }
   a.mail { color: var(--sel); text-decoration: none; font-weight: 600; }
   .lineCopy { border: none; background: transparent; color: var(--ink); font-weight: 600; font-size: 13px; padding: 4px 6px; display: inline-flex; align-items: center; gap: 6px; flex: 0 0 auto; font-variant-numeric: tabular-nums; }
   .lineCopy span { font-weight: 400; font-size: 12px; color: var(--sel); background: var(--selSoft); border-radius: 6px; padding: 2px 6px; }
@@ -162,7 +162,7 @@
   #topbar input:focus { outline: none; background: #fff; border-color: var(--sel); box-shadow: 0 0 0 3px var(--selSoft); }
   #topbar input#metaOwner { width: 128px; font-weight: 600; }
   #topbar input#metaAddr { flex: 1; }
-  #saveState { font-size: 12px; color: var(--ink2); display: flex; align-items: center; gap: 3px; white-space: nowrap; min-width: 56px; opacity: 0; transition: opacity .3s; }
+  #saveState { font-size: 13px; color: var(--ink2); display: flex; align-items: center; gap: 3px; white-space: nowrap; min-width: 56px; opacity: 0; transition: opacity .3s; }
   #saveState.show { opacity: 1; }
   #saveState svg { width: 14px; height: 14px; }
   .tbGroup { display: flex; align-items: center; gap: 2px; }
@@ -197,6 +197,7 @@
   .btn:disabled:active { transform: none; }
   #topbar .layerBtn { max-width: 180px; }
   #topbar .layerBtn span { overflow: hidden; text-overflow: ellipsis; }
+  #topbar .layerBtn em { font-style: normal; font-size: 12px; color: var(--ink2); background: var(--ground); border-radius: 6px; padding: 1px 6px; margin-left: 6px; font-weight: 500; }
   #topbar .layerBtn svg.lk { width: 14px; height: 14px; color: #b7791f; }
 
   /* 「更多」下拉選單 */
@@ -368,6 +369,10 @@
   }
   #app.tb-top #eraserBar, #app.tb-top #wallBar, #app.tb-top #penBar, #app.tb-top #shapeBar, #app.tb-top #dimBar { top: 80px; max-width: calc(100% - 24px); }
   #eraserBar.show, #wallBar.show, #penBar.show, #shapeBar.show, #dimBar.show { display: flex; }
+  /* 直式 iPad：選項列靠左放，右上角的「− 置中 ＋」不會被蓋住 */
+  @media (max-width: 1000px) {
+    #app:not(.tb-top) #eraserBar, #app:not(.tb-top) #wallBar, #app:not(.tb-top) #penBar, #app:not(.tb-top) #shapeBar, #app:not(.tb-top) #dimBar { left: 12px; transform: none; max-width: calc(100% - 196px); }
+  }
   #eraserBar > span, #wallBar > span, #penBar > span, #shapeBar > span, #dimBar > span { flex: 0 0 auto; }
   #eraserBar > span:first-child, #wallBar > span:first-child, #penBar > span:first-child, #shapeBar > span:first-child, #dimBar > span:first-child { font-weight: 600; color: var(--ink); }
   #shapeBar button, #wallBar button, .preset, .sf { border-color: transparent; background: var(--ground); flex: 0 0 auto; }
@@ -501,9 +506,16 @@
   /* 提示訊息 */
   #toast {
     position: absolute; left: 50%; bottom: 78px; transform: translate(-50%, 6px); z-index: 3;
-    background: var(--navy); color: #fff; padding: 10px 18px; border-radius: 14px; font-size: 14px; box-shadow: var(--floatHi);
-    opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.2,.9,.25,1); pointer-events: none; white-space: nowrap;
+    display: flex; align-items: center; gap: 8px; max-width: min(560px, calc(100% - 32px));
+    background: #fff; color: var(--ink); border: 1px solid var(--line); padding: 9px 16px 9px 12px; border-radius: 14px;
+    font-size: 14px; line-height: 1.45; box-shadow: var(--floatHi);
+    opacity: 0; transition: opacity .2s, transform .25s cubic-bezier(.2,.9,.25,1); pointer-events: none;
   }
+  #toast::before { content: ""; flex: 0 0 auto; width: 8px; height: 8px; border-radius: 50%; background: var(--sel); }
+  #toast.hint::before { width: 16px; height: 16px; background: none; border-radius: 0;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2.1h5c0-.9.4-1.6 1-2.1A6 6 0 0 0 12 3z'/%3E%3C/svg%3E") center / contain no-repeat;
+    background-color: var(--glaze); }
   #toast.show { opacity: 1; transform: translate(-50%, 0); }
   /* ===== 新手教學 ===== */
   #tour { position: fixed; inset: 0; z-index: 95; display: none; }
@@ -574,7 +586,7 @@
   #sketchPop { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); z-index: 5; width: min(380px, calc(100% - 24px)); display: none;
     background: #fff; border-radius: 20px; padding: 16px 16px 14px; box-shadow: var(--floatHi); }
   #sketchPop.show { display: block; animation: popIn .2s cubic-bezier(.2,.9,.25,1); }
-  #sketchPop h4 { margin: 0 34px 6px 0; font-size: 16px; }
+  #sketchPop h3 { margin: 0 34px 6px 0; font-size: 16px; }
   #sketchPop p { margin: 0 0 12px; font-size: 14px; line-height: 1.6; color: var(--ink2); }
   #sketchPop p b { color: var(--ink); }
   #sketchPop .dlgX { position: absolute; top: 10px; right: 10px; width: 32px; height: 32px; }
@@ -598,6 +610,7 @@
   .drawSeg button { display: flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px 0 8px; border: none; border-radius: 9px; background: transparent; color: var(--ink2); font-size: 13.5px; }
   .drawSeg button svg { width: 18px; height: 18px; }
   .drawSeg button.on { background: #fff; color: var(--sel); font-weight: 700; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
+  #wallBar .drawSeg button.on, #penBar .drawSeg button.on { background: #fff; color: var(--sel); font-weight: 700; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
   .drawSeg.nudge { animation: segNudge .9s ease-in-out 2; }
   @keyframes segNudge { 30% { box-shadow: 0 0 0 4px var(--selSoft); } }
   .barSep { width: 1px; height: 22px; background: var(--line); flex: 0 0 auto; }
@@ -613,6 +626,16 @@
   /* 自由標註兩端的把手：第一次畫完閃一下 */
   .fdimPulse { animation: fdimPulse .7s ease-in-out 3; transform-box: fill-box; transform-origin: center; }
   @keyframes fdimPulse { 50% { transform: scale(1.6); opacity: .75; } }
+  /* 選項列：平常只顯示「小中大」這種按鈕，要精細調整才按「自訂」打開滑桿和數字 */
+  #eraserBar .adv, #wallBar .adv, #penBar .adv, #shapeBar .adv, #dimBar .adv { display: none; }
+  .advOpen .adv { display: initial !important; }
+  .advOpen label.adv { display: inline-flex !important; }
+  .advBtn { display: flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px 0 8px; border: none; border-radius: 10px; background: transparent; color: var(--ink2); font-size: 13px; flex: 0 0 auto; }
+  .advBtn svg { width: 17px; height: 17px; }
+  .advOpen .advBtn { background: var(--selSoft); color: var(--sel); font-weight: 600; }
+  .chipPres { display: flex; gap: 2px; padding: 3px; background: var(--ground2); border-radius: 11px; flex: 0 0 auto; }
+  .chipPres button { min-width: 38px; height: 32px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: var(--ink2); font-size: 14px; }
+  .chipPres button.on { background: #fff; color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
   /* ===================== 計算機（浮動面板，可以拖） ===================== */
   #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
     background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
@@ -623,7 +646,7 @@
   .calcScreen { background: var(--ground); border-radius: 14px; padding: 8px 12px 6px; text-align: right; font-variant-numeric: tabular-nums; }
   #calcExpr { min-height: 20px; font-size: 15px; color: var(--ink2); word-break: break-all; }
   #calcOut { font-size: 34px; font-weight: 700; line-height: 41px; height: 41px; color: var(--ink); overflow: hidden; white-space: nowrap; }
-  #calcOut.err { color: var(--glaze); font-size: 18px; line-height: 41px; }
+  #calcOut.err { color: var(--glazeDark); font-size: 18px; line-height: 41px; }
   .calcConv { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
   .calcConv button { height: 36px; border: 1px solid var(--line); background: #fff; border-radius: 10px; font-size: 14px; color: var(--ink); padding: 0; white-space: nowrap; }
   .calcConv button:active { background: var(--ground); }
@@ -631,7 +654,7 @@
   .calcKeys button { height: 52px; border: none; border-radius: 13px; background: var(--ground); font-size: 23px; font-weight: 600; color: var(--ink); padding: 0; touch-action: manipulation; }
   .calcKeys button:active { filter: brightness(.92); transform: scale(.97); }
   .calcKeys .op { background: var(--selSoft); color: var(--sel); }
-  .calcKeys .clr { color: var(--glaze); font-size: 19px; }
+  .calcKeys .clr { color: var(--glazeDark); font-size: 19px; }
   .calcKeys .eq { background: var(--sel); color: #fff; }
   #calcUse { height: 46px; font-size: 16px; width: 100%; }
   /* 尺寸框旁邊的計算機小按鈕 */
@@ -710,7 +733,7 @@
     <button class="btn ghost layerBtn" id="btnLayers" title="圖層"></button>
     <button class="btn ghost" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span class="lbl">計算機</span></button>
     <button class="btn ghost" id="btnSettings" title="設定"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">設定</span></button>
-    <button class="btn ghost icon" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg></button>
+    <button class="btn ghost" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span class="lbl">更多</span></button>
     <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
   </header>
   <!-- 「更多」選單：不常用、比較危險的動作收在這裡 -->
@@ -796,7 +819,7 @@
     <button id="sketchChip" type="button"><span class="sw"></span>草圖底稿<small id="sketchChipState">淡淡顯示</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
     <div id="sketchPop" role="dialog" aria-label="草圖底稿">
       <button class="dlgX" id="sketchPopX" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-      <h4>淡淡的線是「草圖底稿」</h4>
+      <h3>淡淡的線是「草圖底稿」</h3>
       <p>切到<b>精畫</b>後，現場畫的草圖會變淡、鎖住，讓你照著描牆、放符號。<b>匯出圖片時不會印出來</b>。</p>
       <div class="acts">
         <button id="skBack"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg><span>回草圖修改<small>切回草圖模式，線會變回清楚的、可以擦</small></span></button>
@@ -813,8 +836,9 @@
       <span>橡皮擦</span>
       <button class="preset" data-i="0"><i></i></button>
       <button class="preset" data-i="1"><i></i></button>
-      <input type="range" class="sizeSlider" id="eraserSlider" min="4" max="120" step="1">
-      <input type="number" class="sizeNum" id="eraserNum" min="4" max="120" step="1" inputmode="numeric">
+      <input type="range" class="sizeSlider adv" id="eraserSlider" min="4" max="120" step="1">
+      <input type="number" class="sizeNum adv" id="eraserNum" min="4" max="120" step="1" inputmode="numeric">
+      <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="penBar">
       <div class="drawSeg" role="group" aria-label="畫法">
@@ -826,8 +850,9 @@
       <button class="preset" data-i="0"><i></i></button>
       <button class="preset" data-i="1"><i></i></button>
       <button class="preset" data-i="2"><i></i></button>
-      <input type="range" class="sizeSlider" id="penSlider" min="0.5" max="50" step="0.5">
-      <input type="number" class="sizeNum" id="penNum" min="0.5" max="50" step="0.5" inputmode="decimal">
+      <input type="range" class="sizeSlider adv" id="penSlider" min="0.5" max="50" step="0.5">
+      <input type="number" class="sizeNum adv" id="penNum" min="0.5" max="50" step="0.5" inputmode="decimal">
+      <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="wallBar">
       <div class="drawSeg" role="group" aria-label="畫法">
@@ -839,21 +864,25 @@
       <span>牆厚</span>
       <button class="wpre" data-i="0"></button>
       <button class="wpre" data-i="1"></button>
-      <input type="range" class="sizeSlider" id="wallSlider" min="3" max="40" step="1">
-      <input type="number" id="wallNum" min="3" max="60" step="1" inputmode="numeric">
-      <span>cm</span>
+      <input type="range" class="sizeSlider adv" id="wallSlider" min="3" max="40" step="1">
+      <input type="number" class="adv" id="wallNum" min="3" max="60" step="1" inputmode="numeric">
+      <span class="adv">cm</span>
+      <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="dimBar">
       <span>字級</span>
-      <input type="range" class="sizeSlider" id="dimSizeSlider" min="10" max="50" step="1" style="width:110px">
-      <input type="number" class="sizeNum" id="dimSizeVal" min="10" max="50" step="1" inputmode="numeric">
+      <span class="chipPres" id="dimSizePres"><button data-v="14">小</button><button data-v="17">中</button><button data-v="22">大</button></span>
+      <input type="range" class="sizeSlider adv" id="dimSizeSlider" min="10" max="50" step="1" style="width:110px">
+      <input type="number" class="sizeNum adv" id="dimSizeVal" min="10" max="50" step="1" inputmode="numeric">
       <span class="barSep"></span>
       <span>線粗</span>
-      <input type="range" class="sizeSlider" id="dimLineSlider" min="0.6" max="10" step="0.1" style="width:90px">
-      <input type="number" class="sizeNum" id="dimLineVal" min="0.6" max="10" step="0.1" inputmode="decimal">
+      <span class="chipPres" id="dimLinePres"><button data-v="0.8">細</button><button data-v="1.1">中</button><button data-v="1.8">粗</button></span>
+      <input type="range" class="sizeSlider adv" id="dimLineSlider" min="0.6" max="10" step="0.1" style="width:90px">
+      <input type="number" class="sizeNum adv" id="dimLineVal" min="0.6" max="10" step="0.1" inputmode="decimal">
       <span class="barSep"></span>
       <span id="dimColors" style="display:flex;gap:5px"></span>
-      <label class="dimCustom" title="自訂顏色"><input type="color" id="dimColorIn"></label>
+      <label class="dimCustom adv" title="自訂顏色"><input type="color" id="dimColorIn"></label>
+      <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="shapeBar">
       <button class="sk" data-k="arrow" title="箭頭"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20L20 4M11 4h9v9"/></svg></button>
@@ -863,13 +892,15 @@
       <button class="sk" data-k="ellipse" title="圓形"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><ellipse cx="12" cy="12" rx="9" ry="7"/></svg></button>
       <span class="barSep"></span>
       <span>粗細</span>
-      <input type="range" class="sizeSlider" id="shapeWidthSlider" min="0.5" max="50" step="0.5" style="width:100px">
-      <input type="number" class="sizeNum" id="shapeNum" min="0.5" max="50" step="0.5" inputmode="decimal">
+      <span class="chipPres" id="shapePres"><button data-v="2">細</button><button data-v="3">中</button><button data-v="5">粗</button></span>
+      <input type="range" class="sizeSlider adv" id="shapeWidthSlider" min="0.5" max="50" step="0.5" style="width:100px">
+      <input type="number" class="sizeNum adv" id="shapeNum" min="0.5" max="50" step="0.5" inputmode="decimal">
       <span class="barSep"></span>
       <span>填色</span>
       <button class="sf" data-f="none">不填</button>
       <button class="sf" data-f="tint">淡色</button>
       <button class="sf" data-f="solid">實心</button>
+      <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="selBar">
       <button id="selSize" title="點一下輸入圖塊尺寸"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h18M3 8l3-3M3 8l3 3M21 8l-3-3M21 8l-3 3"/><rect x="5" y="13" width="14" height="7" rx="1.5"/></svg><span id="selSizeTxt"></span></button>
@@ -2981,7 +3012,7 @@ function endPointer(e) {
       // 沒拖：當成點一下，看是不是點到手繪線（提示）
       const hit = hitTest(a.sx, a.sy);
       const it = hit && hit.id && doc.items.find((x) => x.id === hit.id);
-      if (it && it.type === "stroke" && !it.straight) toast("手繪線不能標尺寸：畫的時候停住 0.5 秒變成直線就可以");
+      if (it && it.type === "stroke" && !it.straight) toast("手繪線不能標尺寸：畫完停住 0.5 秒變直線就可以");
       return;
     }
     pushUndo();
@@ -3007,7 +3038,7 @@ function endPointer(e) {
     } else {
       const hit = hitTest(a.sx, a.sy);
       const it = hit && hit.id && doc.items.find((x) => x.id === hit.id);
-      if (it && it.type === "stroke" && !it.straight) toast("手繪線不能標尺寸：畫的時候停住 0.5 秒變成直線就可以");
+      if (it && it.type === "stroke" && !it.straight) toast("手繪線不能標尺寸：畫完停住 0.5 秒變直線就可以");
       else if (!doc.items.some((x) => segCount(x))) toast("先畫直線、矩形或牆，再來標尺寸");
     }
   } else if (a.type === "textTap") {
@@ -3483,7 +3514,7 @@ function buildTray() {
     trayEditing = !trayEditing;
     if (trayEditing) setTrayCollapsed(false);
     buildTray();
-    if (trayEditing) toast("按住符號左右拖曳換位置，點眼睛隱藏不常用的");
+    if (trayEditing) hint("trayEdit", "按住符號拖曳換位置，點眼睛隱藏");
   });
   tabs.appendChild(ed);
   // 收起／展開符號列（收起來畫布比較大）
@@ -3572,7 +3603,7 @@ function addSymbol(key) {
   ui.selectedId = it.id;
   setTool("select");
   afterChange();
-  toast("拖曳移動，四個角縮放、四邊拉長，上方圓點旋轉；下面可以直接打尺寸");
+  hint("sym", "拖角落縮放，下面可以直接打尺寸");
 }
 
 
@@ -3632,7 +3663,7 @@ function maybeFdimHint() {
   if (id == null || !doc.items.some((i) => i.id === id)) return;
   try { if (localStorage.getItem(FDIM_HINT_KEY)) return; localStorage.setItem(FDIM_HINT_KEY, "1"); } catch (e) { return; }
   ui.fdimPulse = id; render();
-  toast("小技巧：拖兩端的圓點可以拉長縮短，拖數字可以移動位置");
+  toast("拖兩端的圓點可以拉長縮短，拖數字可以移位置", true);
   setTimeout(() => { if (ui.fdimPulse === id) { ui.fdimPulse = null; render(); } }, 2300);
 }
 function closeDim(ok) {
@@ -3815,7 +3846,7 @@ function insertImage(src, w, h, assetId) {
   ui.selectedId = it.id;
   setTool("select");
   afterChange();
-  toast("拖曳移動，拖四個角縮放；描圖時可以調「透明度」");
+  hint("img", "拖角落縮放，描圖時可以調透明度");
 }
 $("selOpacity").addEventListener("click", () => {
   const it = selected(); if (!it || it.type !== "img") return;
@@ -3850,7 +3881,7 @@ function setTool(tool) {
   render();
   if (tool === "dim") {
     const n = unmeasuredCount();
-    toast(n ? `點「?」標整段（還有 ${n} 段）；從一點拖到另一點＝自由標註` : "從一點拖到另一點＝自由標註；按住數字拖曳可以拉遠拉近");
+    hint("dim", n ? `點「?」輸入長度，還有 ${n} 段` : "從一點拉到另一點，就是一條尺寸");
   }
   if (!action) liveG.innerHTML = "";
 }
@@ -3984,7 +4015,8 @@ $("wallNum").addEventListener("keydown", (e) => { if (e.key === "Enter") $("wall
 /* ---------- 圖層面板 ---------- */
 function updateLayerButton() {
   const l = activeLayer();
-  $("btnLayers").innerHTML = ICON.layers + `<span class="lbl">${escapeXml(l.name)}</span>` + (l.locked ? ICON.lock.replace('class="i"', 'class="i lk"') : "");
+  $("btnLayers").innerHTML = ICON.layers + `<span class="lbl">圖層<em>${escapeXml(l.name)}</em></span>` + (l.locked ? ICON.lock.replace('class="i"', 'class="i lk"') : "");
+  $("btnLayers").title = `圖層（目前畫在「${l.name}」）`;
 }
 function renderLayerList() {
   const list = $("layerList");
@@ -4126,9 +4158,9 @@ function setMode(mode) {
     const hasSketch = sketchItems().length > 0;
     let seen = true; try { seen = !!localStorage.getItem(SKETCH_EXPLAINED_KEY); } catch (e) { /* 讀不到就當看過 */ }
     if (hasSketch && !seen) { openSketchPop(); try { localStorage.setItem(SKETCH_EXPLAINED_KEY, "1"); } catch (e) { /* 存不了就算了 */ } }
-    else toast(hasSketch ? "草圖變成淡淡的底稿了，直接在上面描（下面「草圖底稿」可以回去改）" : "精畫模式：工具全部打開了");
+    else if (hasSketch) hint("fineSketch", "草圖變成淡淡的底稿，直接在上面描");
   }
-  else toast("草圖模式：隨手畫，尺寸用筆寫在旁邊就好");
+  else hint("sketchMode", "隨手畫，尺寸用筆寫在旁邊就好");
 }
 function applyModeUI() {
   const sk = doc.mode === "sketch";
@@ -4155,7 +4187,7 @@ document.querySelectorAll(".drawSeg button").forEach((b) => b.addEventListener("
   const m = b.dataset.ds;
   if (b.closest("#penBar")) ui.penShape = m; else ui.drawShape = m;
   refreshDrawSeg(); savePrefs();
-  toast({ free: "自由畫：畫完停住不放，會自動變直線或矩形", line: "直線：從起點拉到終點", rect: "矩形：從一個角拉到對角" }[m]);
+  hint("ds-" + m, { free: "畫完停住不放，會變直線或矩形", line: "從起點拉到終點", rect: "從一個角拉到對角" }[m]);
 }));
 refreshDrawSeg();
 // 自由畫時，畫了好幾條「看起來想畫直線」的線卻沒有停住：提醒一次
@@ -4222,6 +4254,19 @@ $("symSizeOk").addEventListener("click", () => {
   afterChange(); renderOverlay();
 });
 ["symW", "symD"].forEach((id) => $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); $("symSizeOk").click(); } }));
+
+/* ---------- 選項列的「自訂」與「小中大」 ---------- */
+document.querySelectorAll(".advBtn").forEach((b) => b.addEventListener("click", () => b.parentElement.classList.toggle("advOpen")));
+document.querySelectorAll("#dimSizePres button").forEach((b) => b.addEventListener("click", () => setDimStyle({ dimSize: Number(b.dataset.v) }, true)));
+document.querySelectorAll("#dimLinePres button").forEach((b) => b.addEventListener("click", () => setDimStyle({ dimLine: Number(b.dataset.v) }, true)));
+function refreshShapePres() {
+  if (!$("shapePres")) return;
+  const v = Number($("shapeNum").value);
+  document.querySelectorAll("#shapePres button").forEach((b) => b.classList.toggle("on", Number(b.dataset.v) === v));
+}
+document.querySelectorAll("#shapePres button").forEach((b) => b.addEventListener("click", () => {
+  setShapeWidth(Number(b.dataset.v), true);
+}));
 
 /* ---------- 草圖底稿膠囊 ----------
    精畫模式下有草圖時，畫面下方出現「草圖底稿」，點開有說明和三個選擇。
@@ -4309,6 +4354,8 @@ function refreshDimBar() {
     b.addEventListener("click", () => setDimStyle({ dimColor: col }, true));
     box.appendChild(b);
   }
+  document.querySelectorAll("#dimSizePres button").forEach((b) => b.classList.toggle("on", Number(b.dataset.v) === s));
+  document.querySelectorAll("#dimLinePres button").forEach((b) => b.classList.toggle("on", Math.abs(Number(b.dataset.v) - lw) < 0.01));
   $("dimColorIn").value = c;
   $("dimColorIn").parentElement.style.outline = DIM_COLORS.includes(c) ? "" : "3px solid var(--accent)";
 }
@@ -4550,6 +4597,7 @@ document.querySelectorAll("#stepSeg button").forEach((b) => b.addEventListener("
 /* ---------- 圖形工具選項：形狀、填色 ---------- */
 function refreshShapeBar() {
   $("shapeWidthSlider").value = ui.shapeWidth; if (document.activeElement !== $("shapeNum")) $("shapeNum").value = ui.shapeWidth;
+  refreshShapePres();
   document.querySelectorAll("#shapeBar .sk").forEach((b) => b.classList.toggle("on", b.dataset.k === ui.shapeKind));
   document.querySelectorAll("#shapeBar .sf").forEach((b) => b.classList.toggle("on", b.dataset.f === ui.shapeFill));
   // 箭頭沒有填色
@@ -4563,6 +4611,7 @@ function setShapeWidth(v, done) {
   ui.shapeWidth = v;
   $("shapeWidthSlider").value = v;
   if (document.activeElement !== $("shapeNum")) $("shapeNum").value = v;
+  refreshShapePres();
   const it = selected();
   if (it && it.type === "shape" && it.width !== v) { if (!shapeWidthUndo) { pushUndo(); shapeWidthUndo = true; } it.width = v; render(); }
   if (done) { savePrefs(); if (shapeWidthUndo) { shapeWidthUndo = false; afterChange(); } }
@@ -4656,6 +4705,9 @@ function updateGridBg() {
   const tx = ((v.x % M) + M) % M, ty = ((v.y % M) + M) % M;
   layer.style.transform = `translate3d(${tx}px, ${ty}px, 0)`;
 }
+// iPad 轉向、工具列或符號列收合時，畫布大小會變：格線那一層跟著重算（不然下半部會沒有格線）
+if (window.ResizeObserver) new ResizeObserver(() => updateGridBg()).observe($("stageWrap"));
+else addEventListener("resize", () => updateGridBg());
 // 換紙張大小／方向：紙放在原本的紙（或畫好的東西、或畫面）中間
 function setPageSize(size, orient) {
   const old = pageRect();
@@ -5043,12 +5095,22 @@ $("confirmYes").addEventListener("click", () => { $("confirmModal").classList.re
 $("confirmNo").addEventListener("click", () => $("confirmModal").classList.remove("show"));
 
 let toastTimer = null;
-function toast(msg) {
+function toast(msg, isHint) {
   const t = $("toast");
   t.textContent = msg;
+  t.classList.toggle("hint", !!isHint);
   t.classList.add("show");
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+  toastTimer = setTimeout(() => t.classList.remove("show"), isHint ? 3200 : 2200);
+}
+// 教學小提示：同一種提示只出現前 2 次（記在這台 iPad），之後就不再打擾
+const HINT_KEY = "floorplan-hints";
+function hint(key, msg) {
+  let seen = {}; try { seen = JSON.parse(localStorage.getItem(HINT_KEY)) || {}; } catch (e) { /* 讀不到就當沒看過 */ }
+  if ((seen[key] || 0) >= 2) return;
+  seen[key] = (seen[key] || 0) + 1;
+  try { localStorage.setItem(HINT_KEY, JSON.stringify(seen)); } catch (e) { /* 存不了就算了 */ }
+  toast(msg, true);
 }
 
 
@@ -5373,7 +5435,7 @@ async function createDoc(folder) {
   const rec = { id: newId("D"), name: "", folder: folder || null, created: now, updated: now, data: d, view: null, thumb: null, label: "未命名平面圖" };
   await dbPut("docs", rec);
   await openDoc(rec.id);
-  toast("新平面圖已建立，業主姓名可以在上方填");
+  hint("newDoc", "業主姓名可以在上方填");
 }
 const fmtDate = (t) => { const d = new Date(t); return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 async function renderLibrary() {
@@ -5931,7 +5993,7 @@ async function init() {
   }
   if (tabs.length && !ses.inLibrary) loadTab(Math.min(Math.max(ses.active ?? 0, 0), tabs.length - 1));
   else await showLibrary();
-  toast(migrated ? "你之前畫的圖已經搬進文件庫了，點一下就能繼續畫" : "畫完先別放開筆，停住 0.5 秒就會變成直線或矩形");
+  if (migrated) toast("你之前畫的圖已經搬進文件庫了，點一下就能繼續畫"); else hint("start", "畫完先別放開筆，停住 0.5 秒會變直線");
   checkWhatsNew(!prefs && !old);   // 有新版本就跳出更新說明
 }
 window.addEventListener("resize", () => renderOverlay());
@@ -5941,8 +6003,14 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.09.5";
+const APP_VERSION = "2026.11.10.1";
 const CHANGELOG = [
+  ["2026.11.10.1", [
+    "介面整理：iPad 轉向後格線會補滿整個畫面",
+    "上方的小提示改成淺色，句子變短；同一種提示只出現前兩次",
+    "筆粗、字級、線粗先用「小／中／大」按鈕，要精細調整再按「自訂」",
+    "圖層按鈕寫上「圖層」和目前畫在哪一層；「⋯」旁邊加上「更多」",
+  ]],
   ["2026.11.09.5", [
     "畫筆、牆壁每次打開都從「自由」開始（直線、矩形用完不會一直記著）",
   ]],
