@@ -2958,8 +2958,12 @@ stage.addEventListener("pointermove", (e) => {
       applyView();
       break;
     case "move": {
-      const dx = wx - action.wx, dy = wy - action.wy;
+      let dx = wx - action.wx, dy = wy - action.wy;
       if (Math.hypot(dx, dy) * ui.view.z > 3) action.moved = true;
+      if (action.moved) {
+        if (action.tg === undefined) { action.sbox = itemBox(action.start); action.tg = action.sbox ? guideTargets(action.item) : null; }
+        [dx, dy] = snapMove(action, dx, dy);
+      }
       moveItem(action.item, action.start, dx, dy);
       dragRender(action.item);
       break;
@@ -3046,6 +3050,7 @@ function endPointer(e) {
     const size = 22;
     openInlineText({ x: a.wx, y: a.wy - size / 2, size, color: ui.color, text: "" });
   } else if (a.type === "move") {
+    liveG.innerHTML = "";   // 收起對齊輔助線
     if (!a.moved) undoStack.pop();   // 只是點一下選取，不算一次修改
     afterChange();
   } else if (a.type === "erase") {
@@ -3245,6 +3250,68 @@ function makeShape(a) {
   const base = { type: "shape", kind: ui.shapeKind, layer: layerFor("note"), color: ui.color, width: ui.shapeWidth };
   if (ui.shapeKind === "arrow" || ui.shapeKind === "elbow") return { ...base, x1: a.x1, y1: a.y1, x2: a.x2, y2: a.y2 };
   return { ...base, x: Math.min(a.x1, a.x2), y: Math.min(a.y1, a.y2), w: Math.max(4, Math.abs(a.x2 - a.x1)), h: Math.max(4, Math.abs(a.y2 - a.y1)), fill: ui.shapeFill, text: "" };
+}
+/* ---------- 對齊輔助線 ----------
+   拖曳東西時，左邊／中間／右邊（上／中／下）對到別的東西，就出現粉紅色虛線並自動吸過去。
+   例：兩根柱子要對稱，拖第二根到第一根的正下方，中心線一對到就會吸住。 */
+const GUIDE_COLOR = "#e0457b";
+// 東西在畫布上的外框 [左, 上, 右, 下]
+function itemBox(it) {
+  if (it.type === "stroke") {
+    let x1 = Infinity, y1 = Infinity, x2 = -Infinity, y2 = -Infinity;
+    for (const [x, y] of it.pts) { x1 = Math.min(x1, x); y1 = Math.min(y1, y); x2 = Math.max(x2, x); y2 = Math.max(y2, y); }
+    const h = (it.width || 0) / 2;
+    return [x1 - h, y1 - h, x2 + h, y2 + h];
+  }
+  if (it.type === "sym" || it.type === "img" || it.type === "text") {
+    const [W, H] = it.type === "text" ? textDims(it) : symSize(it);
+    const [cx, cy] = it.type === "text" ? textCenter(it) : symCenter(it);
+    const a = (it.rot || 0) * Math.PI / 180, c = Math.abs(Math.cos(a)), s = Math.abs(Math.sin(a));
+    const hw = (W * c + H * s) / 2, hh = (W * s + H * c) / 2;
+    return [cx - hw, cy - hh, cx + hw, cy + hh];
+  }
+  if (isShapeBox(it)) return [it.x, it.y, it.x + it.w, it.y + it.h];
+  if (isArrow(it)) return [Math.min(it.x1, it.x2), Math.min(it.y1, it.y2), Math.max(it.x1, it.x2), Math.max(it.y1, it.y2)];
+  return null;   // 自由標註不參與對齊
+}
+// 拖曳開始時，把其他看得到的東西的對齊線先算好
+function guideTargets(moving) {
+  const xs = [], ys = [];
+  for (const it of doc.items) {
+    if (it.id === moving.id) continue;
+    const l = layerOf(it);
+    if (!l.visible || (l.sketch && doc.mode !== "sketch")) continue;
+    const b = itemBox(it); if (!b || !b.every(isFinite)) continue;
+    for (const v of [b[0], (b[0] + b[2]) / 2, b[2]]) xs.push({ v, box: b });
+    for (const v of [b[1], (b[1] + b[3]) / 2, b[3]]) ys.push({ v, box: b });
+  }
+  return { xs, ys };
+}
+// 算吸附：回傳修正後的位移，順便畫輔助線
+function snapMove(a, dx, dy) {
+  const sb = a.sbox;
+  if (!sb || !a.tg) return [dx, dy];
+  const tol = 8 / ui.view.z;
+  const pick = (cands, list) => {
+    let best = null;
+    for (const c of cands) for (const t of list) {
+      const d = t.v - c;
+      if (Math.abs(d) <= tol && (!best || Math.abs(d) < Math.abs(best.d))) best = { d, t };
+    }
+    return best;
+  };
+  const bx = pick([sb[0] + dx, (sb[0] + sb[2]) / 2 + dx, sb[2] + dx], a.tg.xs);
+  const by = pick([sb[1] + dy, (sb[1] + sb[3]) / 2 + dy, sb[3] + dy], a.tg.ys);
+  if (bx) dx += bx.d;
+  if (by) dy += by.d;
+  // 輔助線：從移動中的東西延伸到對齊的那個東西
+  const z = ui.view.z, m = [sb[0] + dx, sb[1] + dy, sb[2] + dx, sb[3] + dy], pad = 14 / z;
+  let g = "";
+  const line = (x1, y1, x2, y2) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${GUIDE_COLOR}" stroke-width="${1.5 / z}" stroke-dasharray="${5 / z} ${4 / z}"/>`;
+  if (bx) { const x = bx.t.v; g += line(x, Math.min(m[1], bx.t.box[1]) - pad, x, Math.max(m[3], bx.t.box[3]) + pad); }
+  if (by) { const y = by.t.v; g += line(Math.min(m[0], by.t.box[0]) - pad, y, Math.max(m[2], by.t.box[2]) + pad, y); }
+  liveG.innerHTML = g;
+  return [dx, dy];
 }
 function moveItem(it, start, dx, dy) {
   if (isArrow(it) || it.type === "dim") { it.x1 = start.x1 + dx; it.y1 = start.y1 + dy; it.x2 = start.x2 + dx; it.y2 = start.y2 + dy; return; }
@@ -4866,6 +4933,7 @@ $("selDup").addEventListener("click", () => {
   doc.items.push(copy);
   ui.selectedId = copy.id;
   afterChange();
+  hint("dup", "拖到要放的位置，出現粉紅線就是對齊了");
 });
 $("selFront").addEventListener("click", () => {
   const it = selected(); if (!it) return;
@@ -6003,8 +6071,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.10.1";
+const APP_VERSION = "2026.11.10.2";
 const CHANGELOG = [
+  ["2026.11.10.2", [
+    "拖曳柱子、符號、文字時會出現粉紅色對齊線：中心或邊對到別的東西就會自動吸過去，對稱的柱子一拖就對齊",
+    "小技巧：要兩根一樣大的柱子，畫好一根後按「複製」再拖過去",
+  ]],
   ["2026.11.10.1", [
     "介面整理：iPad 轉向後格線會補滿整個畫面",
     "上方的小提示改成淺色，句子變短；同一種提示只出現前兩次",
