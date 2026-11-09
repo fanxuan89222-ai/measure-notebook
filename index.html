@@ -378,6 +378,8 @@
   #dimColors button { width: 28px; height: 28px; border-radius: 8px; padding: 0; border: none; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.2); }
   #dimColors button.on { box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sel); }
   .dimCustom input { width: 32px; height: 32px; border: none; padding: 0; background: none; }
+  /* 直式 iPad：工具列太擠，拿掉滑桿（預設按鈕和數字框還在） */
+  @media (max-width: 1000px) { #wallBar .sizeSlider, #penBar .sizeSlider { display: none; } }
   .barSep { width: 1px; align-self: stretch; background: var(--line); margin: 4px 2px; flex: 0 0 auto; }
   /* 大小預設（三個圓點）＋ 滑桿，像 GoodNotes */
   .preset { width: 44px; height: 40px; display: flex; align-items: center; justify-content: center; padding: 0; }
@@ -590,6 +592,14 @@
   #libNotice[hidden] { display: none; }
   .helpNotice { margin: 0 0 14px; }
   .tourNote { display: block; margin-top: 8px; font-size: 13px; color: #8a5a34; }
+  /* 畫法：自由／直線／矩形（畫筆、牆壁共用） */
+  .drawSeg { display: flex; gap: 2px; padding: 3px; background: var(--ground2); border-radius: 12px; flex: 0 0 auto; }
+  .drawSeg button { display: flex; align-items: center; gap: 4px; height: 34px; padding: 0 10px 0 8px; border: none; border-radius: 9px; background: transparent; color: var(--ink2); font-size: 13.5px; }
+  .drawSeg button svg { width: 18px; height: 18px; }
+  .drawSeg button.on { background: #fff; color: var(--sel); font-weight: 700; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
+  .drawSeg.nudge { animation: segNudge .9s ease-in-out 2; }
+  @keyframes segNudge { 30% { box-shadow: 0 0 0 4px var(--selSoft); } }
+  .barSep { width: 1px; height: 22px; background: var(--line); flex: 0 0 auto; }
   /* ===================== 計算機（浮動面板，可以拖） ===================== */
   #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
     background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
@@ -794,6 +804,12 @@
       <input type="number" class="sizeNum" id="eraserNum" min="4" max="120" step="1" inputmode="numeric">
     </div>
     <div id="penBar">
+      <div class="drawSeg" role="group" aria-label="畫法">
+        <button data-ds="free" title="自由畫（停住不放會自動拉直）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 16c3-6 5-8 7-5s3 4 5 1 4-6 6-4"/></svg>自由</button>
+        <button data-ds="line" title="直線：從起點拉到終點"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="1.6" fill="currentColor"/><circle cx="20" cy="5" r="1.6" fill="currentColor"/></svg>直線</button>
+        <button data-ds="rect" title="矩形：從一個角拉到對角"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12"/></svg>矩形</button>
+      </div>
+      <span class="barSep"></span>
       <span>筆粗</span>
       <button class="preset" data-i="0"><i></i></button>
       <button class="preset" data-i="1"><i></i></button>
@@ -802,6 +818,12 @@
       <input type="number" class="sizeNum" id="penNum" min="0.5" max="50" step="0.5" inputmode="decimal">
     </div>
     <div id="wallBar">
+      <div class="drawSeg" role="group" aria-label="畫法">
+        <button data-ds="free" title="自由畫（停住不放會自動拉直）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 16c3-6 5-8 7-5s3 4 5 1 4-6 6-4"/></svg>自由</button>
+        <button data-ds="line" title="直線：從起點拉到終點"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 19L20 5"/><circle cx="4" cy="19" r="1.6" fill="currentColor"/><circle cx="20" cy="5" r="1.6" fill="currentColor"/></svg>直線</button>
+        <button data-ds="rect" title="矩形：從一個角拉到對角"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"><rect x="4" y="6" width="16" height="12"/></svg>矩形</button>
+      </div>
+      <span class="barSep"></span>
       <span>牆厚</span>
       <button class="wpre" data-i="0"></button>
       <button class="wpre" data-i="1"></button>
@@ -1567,6 +1589,7 @@ let ui = {
   dimUnit: "cm",                            // 新圖預設單位
   dimCheck: true,                           // 匯出前檢查漏量
   paper: { color: "#ffffff", pattern: "grid" },   // 新圖的紙張（上次選的）
+  drawShape: "free",   // 畫筆／牆壁的畫法：free 自由（停住會拉直）、line 直線、rect 矩形
   shapeKind: "rect", shapeFill: "none", shapeWidth: 3,            // 圖形工具：目前的形狀、填色
   lastDimId: null,                          // 「畫完就出現 ?」模式：剛畫好的那條線
   quickWords: null,                         // 自訂常用字（null＝用預設）
@@ -1614,7 +1637,7 @@ const newId = (p) => p + Date.now().toString(36) + Math.random().toString(36).sl
 function prefsObj() {
   return { toolbarPos: ui.toolbarPos, wallSizes: ui.wallSizes, wallIdx: ui.wallIdx, penSizes: ui.penSizes, penIdx: ui.penIdx,
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
-    quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill,
+    quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill, drawShape: ui.drawShape,
     trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
     quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer, calcPos: ui.calcPos,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
@@ -1665,6 +1688,7 @@ function applyPrefs(p) {
   if (p.quickLenLabel === false) ui.quickLenLabel = false;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
+  if (["free", "line", "rect"].includes(p.drawShape)) ui.drawShape = p.drawShape;
   if (p.shapeFill) ui.shapeFill = p.shapeFill;
   if (p.shapeWidth) ui.shapeWidth = p.shapeWidth;
 }
@@ -2669,8 +2693,8 @@ stage.addEventListener("pointerdown", (e) => {
     if (ui.selectedId) { ui.selectedId = null; renderOverlay(); }
     const wall = tool === "wall";
     const width = wall ? ui.wallCm * PX_PER_CM : ui.penSizes[ui.penIdx];
-    action = { type: "draw", pts: [[wx, wy]], shape: null, wall, width };
-    armHold(action, e.clientX, e.clientY);
+    action = { type: "draw", pts: [[wx, wy]], shape: null, wall, width, forced: ui.drawShape !== "free" ? ui.drawShape : null, touch: e.pointerType === "touch" };
+    if (!action.forced) armHold(action, e.clientX, e.clientY);   // 直線／矩形模式不用停住
     // 預覽：用 #livePath 當外框，牆壁筆多一條 #liveFill 當填色
     liveG.innerHTML = wall
       ? `<path id="livePath" fill="none" stroke="${ui.color}" stroke-width="${width}" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>`
@@ -2738,6 +2762,18 @@ stage.addEventListener("pointermove", (e) => {
 
   switch (action.type) {
     case "draw": {
+      if (action.forced) {
+        // 直線／矩形模式：起點固定，跟著筆拉
+        const p1 = action.pts[0];
+        const sh = action.forced === "line"
+          ? { kind: "line", pts: [p1, snapSeg(p1, [wx, wy])] }
+          : { kind: "rect", pts: [p1, [wx, p1[1]], [wx, wy], [p1[0], wy], p1] };
+        quantizeShape(sh);
+        action.shape = sh;
+        setLive(strokePath(sh.pts, true));
+        showLiveLen(sh);
+        break;
+      }
       if (action.shape) {
         // 已經變成標準形狀：跟著筆調整
         adjustShape(action.shape, [wx, wy]);
@@ -2753,8 +2789,9 @@ stage.addEventListener("pointermove", (e) => {
         if (Math.hypot(p[0] - last[0], p[1] - last[1]) > 1.2 / ui.view.z) action.pts.push(p);
       }
       setLive(strokePath(action.pts));
-      // 移動超過 4 像素才算「沒停住」，手的微微抖動不算
-      if (Math.hypot(e.clientX - action.holdAt[0], e.clientY - action.holdAt[1]) > 4) armHold(action, e.clientX, e.clientY);
+      // 移動超過一點點才算「沒停住」，手的微微抖動不算
+      // 用手指畫抖得比較厲害，放寬到 9 像素
+      if (Math.hypot(e.clientX - action.holdAt[0], e.clientY - action.holdAt[1]) > (action.touch ? 9 : 5)) armHold(action, e.clientX, e.clientY);
       break;
     }
     case "shapeDraw": {
@@ -2876,6 +2913,14 @@ function endPointer(e) {
   if (a.type === "draw") {
     clearTimeout(a.holdTimer);
     liveG.innerHTML = "";
+    // 直線／矩形模式：只點一下或拉太短＝不算
+    if (a.forced) {
+      const sh = a.shape, z = ui.view.z;
+      const tiny = !sh || (a.forced === "line"
+        ? Math.hypot(sh.pts[1][0] - sh.pts[0][0], sh.pts[1][1] - sh.pts[0][1]) * z < 10
+        : Math.abs(sh.pts[2][0] - sh.pts[0][0]) * z < 10 || Math.abs(sh.pts[2][1] - sh.pts[0][1]) * z < 10);
+      if (tiny) { toast(a.forced === "line" ? "直線：從起點拉到終點" : "矩形：從一個角拉到對角"); return; }
+    } else if (!a.shape) maybeHintStraight(a);
     let pts = a.pts, straight = false;
     if (a.shape) {
       pts = a.shape.pts;
@@ -4017,6 +4062,30 @@ function applyModeUI() {
 }
 document.querySelectorAll("#modeSeg button").forEach((b) => b.addEventListener("click", () => setMode(b.dataset.m)));
 $("exportSketch").addEventListener("change", (e) => { doc.meta.exportSketch = e.target.checked; save(); });
+/* ---------- 畫法：自由／直線／矩形 ----------
+   有些人不知道「畫完停住」會拉直，所以畫筆、牆壁上面直接給「直線」「矩形」兩個按鈕。 */
+function refreshDrawSeg() {
+  document.querySelectorAll(".drawSeg button").forEach((b) => b.classList.toggle("on", b.dataset.ds === ui.drawShape));
+}
+document.querySelectorAll(".drawSeg button").forEach((b) => b.addEventListener("click", () => {
+  ui.drawShape = b.dataset.ds; refreshDrawSeg(); savePrefs();
+  toast({ free: "自由畫：畫完停住不放，會自動變直線或矩形", line: "直線：從起點拉到終點", rect: "矩形：從一個角拉到對角" }[ui.drawShape]);
+}));
+refreshDrawSeg();
+// 自由畫時，畫了好幾條「看起來想畫直線」的線卻沒有停住：提醒一次
+let straightMiss = 0, straightHinted = false;
+function maybeHintStraight(a) {
+  if (straightHinted || doc.mode === "sketch") return;
+  const sh = recognize(a.pts);
+  if (!sh || (sh.kind !== "line" && sh.kind !== "rect")) return;
+  let len = 0; for (let i = 1; i < a.pts.length; i++) len += Math.hypot(a.pts[i][0] - a.pts[i - 1][0], a.pts[i][1] - a.pts[i - 1][1]);
+  if (len * ui.view.z < 120) return;
+  if (++straightMiss < 2) return;
+  straightHinted = true;
+  document.querySelectorAll(".drawSeg").forEach((g) => { g.classList.remove("nudge"); void g.offsetWidth; g.classList.add("nudge"); });
+  toast("想畫直線或矩形？畫完停住別放開，或點上面的「直線」「矩形」");
+}
+
 /* ---------- 草圖底稿膠囊 ----------
    精畫模式下有草圖時，畫面下方出現「草圖底稿」，點開有說明和三個選擇。
    第一次切到精畫會自動打開說明；在淡淡的線上點、擦不掉時，膠囊會跳一下提醒。 */
@@ -5310,7 +5379,7 @@ const GESTURES_HTML = `
   <div class="gest"><svg viewBox="0 0 64 52" class="drag"><circle class="f" cx="32" cy="26" r="9"/></svg><b>手指拖曳</b>移動畫面（筆畫圖）</div>`;
 const TIPS = [
   { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的<b>底稿</b>讓你描（下面的「草圖底稿」可以回去改或藏起來）。", target: "#modeSeg" },
-  { id: "straighten", title: "按住拉直", text: "畫完<b>先別放開筆</b>，停 0.5 秒：歪歪的線會變直線，畫一圈會變成方正的矩形。", target: '[data-tool="pen"]' },
+  { id: "straighten", title: "畫直線、矩形", text: "畫完<b>先別放開筆</b>，停 0.5 秒：歪歪的線會變直線，畫一圈會變成方正的矩形。也可以在上面選<b>「直線」「矩形」</b>，直接拉。", target: '[data-tool="pen"]' },
   { id: "room", title: "畫房間和柱子", text: "牆壁筆畫一圈、<b>停住</b>就是房間；沿著牆的內側畫一小段就是<b>柱子</b>。用選取點一下，就能拖到別的位置。", target: '[data-tool="wall"]' },
   { id: "dims", title: "標尺寸＋計算機", text: "點「?」輸入這段的長度。要加加減減就點旁邊的<b>計算機</b>，算好按「帶入」。也可以從一點拉到另一點自由標註。", target: '[data-tool="dim"]' },
   { id: "symbols", title: "放符號", text: "下面的符號點一下就放進圖裡。拖<b>四個角</b>等比例縮放、拖<b>四邊</b>只拉長，上面的圓點旋轉。", target: "#tray" },
@@ -5732,8 +5801,13 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.08.6";
+const APP_VERSION = "2026.11.09.1";
 const CHANGELOG = [
+  ["2026.11.09.1", [
+    "畫筆、牆壁上面多了「自由／直線／矩形」：選直線就從起點拉到終點，選矩形就從一個角拉到對角，不用再「停住」",
+    "用手指畫的時候，「停住拉直」比較容易成功（手抖一點點也算停住）",
+    "自由畫時好像想畫直線卻沒停住，會提醒可以怎麼畫",
+  ]],
   ["2026.11.08.6", [
     "首頁和使用說明加上公告：教學影片正在更新中",
     "計算機拿掉計算紀錄，畫面更簡潔",
