@@ -664,6 +664,8 @@
   .cropBtns .btn { min-width: 96px; }
   /* 鎖定的東西被選到：選取列只剩「解鎖」 */
   #selBar.lockedSel > *:not(#selLock) { display: none !important; }
+  #stairOpts { display: none; }
+  #stairOpts.show { display: block; }
   #selBar.lockedSel #selLock { color: #b7791f; font-weight: 600; }
   /* 螢光筆 */
   #hlBar .hlc { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; background: var(--c); padding: 0; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
@@ -1110,6 +1112,10 @@
     <div class="dlgHead"><h3 id="symSizeTitle">圖塊尺寸</h3><button class="dlgX" data-for="symSizeCancel" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></div>
     <div class="dimField"><label for="symW">寬</label><input id="symW" class="mathInput" type="text" inputmode="decimal" autocomplete="off"><span class="u">cm</span><button type="button" class="calcBtn" title="計算機" aria-label="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span>計算機</span></button></div>
     <div class="dimField"><label for="symD">深</label><input id="symD" class="mathInput" type="text" inputmode="decimal" autocomplete="off"><span class="u">cm</span><button type="button" class="calcBtn" title="計算機" aria-label="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span>計算機</span></button></div>
+    <div id="stairOpts">
+      <div class="dimField"><label for="stairSteps">階數</label><input id="stairSteps" type="text" inputmode="numeric" autocomplete="off" placeholder="自動"><span class="u" id="stairAuto"></span></div>
+      <div class="dimField"><label>方向</label><span class="chipPres" id="stairDir"><button type="button" data-v="up">上</button><button type="button" data-v="down">下</button></span></div>
+    </div>
     <label class="row" style="gap:8px;margin:4px 0 12px;font-size:15px;justify-content:flex-start"><input type="checkbox" id="symShowSize" style="width:20px;height:20px">在圖上標出尺寸（匯出也會印）</label>
     <div class="row" style="justify-content:space-between">
       <button class="btn" id="symSizeReset">恢復預設大小</button>
@@ -1301,6 +1307,78 @@ function drainSvg(x, y, s, m, t) {
 function symText(x, y, txt, size) {
   return `<text x="${x}" y="${y}" font-size="${size}" font-weight="700" font-family="Arial, Helvetica, sans-serif" fill="${INK}" text-anchor="middle" dominant-baseline="central" letter-spacing="0.5">${txt}</text>`;
 }
+/* ---------- 樓梯（CAD 平面圖畫法） ----------
+   一階一條線（踏面）、斜的折斷線（剖切位置）、箭頭寫「上」或「下」。
+   用實際尺寸（公分）來畫：拉長是「多幾階」，不會把階梯拉扁。
+   kind：straight 直梯／L L 型梯（轉 90°）／U U 型迴轉梯（轉 180°）
+   W＝寬、L＝長（公分）；steps＝總階數（空白＝自動，每階約 26 公分）；down＝箭頭寫「下」 */
+const TREAD = 26;
+function stairFlights(kind, W, L) {
+  // 回傳每一段樓梯「跑的長度」，用來分配階數
+  if (kind === "L") { const b = stairWidthL(W, L); return [L - b, W - b]; }
+  if (kind === "U") { const d = stairLandingU(W, L); return [L - d, L - d]; }
+  return [L];
+}
+const stairWidthL = (W, L) => Math.max(40, Math.min(120, Math.min(W, L) * 0.42, Math.min(W, L) - 30));
+const stairGapU = (W) => (W > 110 ? 10 : 0);
+const stairLandingU = (W, L) => Math.max(30, Math.min((W - stairGapU(W)) / 2, L - 60));
+function stairCounts(kind, W, L, steps) {
+  const runs = stairFlights(kind, W, L);
+  if (steps > 0) {
+    const tot = runs.reduce((a, b) => a + b, 0) || 1;
+    const c = runs.map((r) => Math.max(1, Math.round(steps * r / tot)));
+    c[c.length - 1] = Math.max(1, steps - c.slice(0, -1).reduce((a, b) => a + b, 0));
+    return c;
+  }
+  return runs.map((r) => Math.max(2, Math.round(r / TREAD)));
+}
+function stairDraw(kind, W, L, steps, down, m, t) {
+  const n = stairCounts(kind, W, L, steps);
+  const ln = (x1, y1, x2, y2, w = t) => `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${INK}" stroke-width="${w}"/>`;
+  let g = "", arrow = [];
+  // 折斷線：斜的一條，中間有一個「閃電」折
+  const brk = (x0, x1, yb) => {
+    const w = x1 - x0, k = Math.min(12, w * 0.12);
+    return `<polyline points="${x0 - 4},${yb + k} ${x0 + w * 0.42},${yb + k * 0.25} ${x0 + w * 0.47},${yb + k} ${x0 + w * 0.53},${yb - k} ${x0 + w * 0.58},${yb - k * 0.25} ${x1 + 4},${yb - k}" fill="none" stroke="${INK}" stroke-width="${t}"/>`;
+  };
+  if (kind === "L") {
+    const b = stairWidthL(W, L), r1 = L - b, r2 = W - b;
+    g += `<path d="M0 ${L} V0 H${W} V${b} H${b} V${L} Z" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+    for (let i = 1; i < n[0]; i++) g += ln(0, L - i * r1 / n[0], b, L - i * r1 / n[0]);
+    g += ln(0, b, b, b) + ln(b, 0, b, b);
+    for (let j = 1; j < n[1]; j++) g += ln(b + j * r2 / n[1], 0, b + j * r2 / n[1], b);
+    g += brk(0, b, b + r1 * 0.45);
+    arrow = [[b / 2, L - 12], [b / 2, b / 2], [W - 14, b / 2]];
+  } else if (kind === "U") {
+    const gp = stairGapU(W), fw = (W - gp) / 2, d = stairLandingU(W, L), r = L - d;
+    g += `<rect x="0" y="0" width="${W}" height="${L}" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+    g += ln(0, d, fw, d) + ln(fw + gp, d, W, d);
+    if (gp) g += `<rect x="${fw}" y="${d}" width="${gp}" height="${r}" fill="#fff" stroke="${INK}" stroke-width="${t}"/>`;
+    else g += ln(fw, d, fw, L, m);
+    for (let i = 1; i < n[0]; i++) g += ln(0, L - i * r / n[0], fw, L - i * r / n[0]);
+    for (let i = 1; i < n[1]; i++) g += ln(fw + gp, d + i * r / n[1], W, d + i * r / n[1]);
+    g += brk(0, fw, d + r * 0.55);
+    arrow = [[fw / 2, L - 12], [fw / 2, d / 2], [fw + gp + fw / 2, d / 2], [fw + gp + fw / 2, L - 14]];
+  } else {
+    g += `<rect x="0" y="0" width="${W}" height="${L}" fill="#fff" stroke="${INK}" stroke-width="${m}"/>`;
+    for (let i = 1; i < n[0]; i++) g += ln(0, L - i * L / n[0], W, L - i * L / n[0]);
+    g += brk(0, W, L * 0.45);
+    arrow = [[W / 2, L - 12], [W / 2, 14]];
+  }
+  if (down) arrow.reverse();
+  // 箭頭：起點一個小圓點，終點三角形；起點旁邊寫「上」或「下」
+  const [s0, s1] = [arrow[0], arrow[1]], e1 = arrow[arrow.length - 1], e0 = arrow[arrow.length - 2];
+  const ang = Math.atan2(e1[1] - e0[1], e1[0] - e0[0]), ah = 9;
+  const tip = `${e1[0]},${e1[1]} ${e1[0] - ah * Math.cos(ang - 0.4)},${e1[1] - ah * Math.sin(ang - 0.4)} ${e1[0] - ah * Math.cos(ang + 0.4)},${e1[1] - ah * Math.sin(ang + 0.4)}`;
+  g += `<polyline points="${arrow.map((q) => q.join(",")).join(" ")}" fill="none" stroke="${INK}" stroke-width="${t * 1.3}"/>`
+    + `<polygon points="${tip}" fill="${INK}"/><circle cx="${s0[0]}" cy="${s0[1]}" r="2.6" fill="${INK}"/>`;
+  const la = Math.atan2(s1[1] - s0[1], s1[0] - s0[0]);
+  const lx = s0[0] + Math.cos(la) * 20, ly = s0[1] + Math.sin(la) * 20;
+  g += `<text x="${lx}" y="${ly}" font-size="15" font-weight="700" fill="${INK}" stroke="#fff" stroke-width="5" paint-order="stroke" text-anchor="middle" dominant-baseline="central" font-family="-apple-system, 'PingFang TC', 'Noto Sans TC', sans-serif">${down ? "下" : "上"}</text>`;
+  return g;
+}
+const isStair = (it) => it && it.type === "sym" && SYMBOLS[it.key] && SYMBOLS[it.key].stair;
+function stairTotal(it) { const [w, d] = symCm(it); return stairCounts(SYMBOLS[it.key].stair, w, d, it.steps).reduce((a, b) => a + b, 0); }
 // 爐口：外圈＋內圈
 function burner(cx, cy, m, t) {
   return `<circle cx="${cx}" cy="${cy}" r="13" fill="none" stroke="${INK}" stroke-width="${t}"/><circle cx="${cx}" cy="${cy}" r="5" fill="none" stroke="${INK}" stroke-width="${m}"/>`;
@@ -1661,7 +1739,11 @@ const SYMBOLS = {
       <circle cx="30" cy="16" r="6.5" fill="none" stroke="${INK}" stroke-width="${t}"/>
       <path d="M30 4 V28 M18 16 H42" stroke="${INK}" stroke-width="${t}"/>
       ${symText(62, 16, "AC", 10)}`
-  }
+  },
+  // 樓梯：拉長會多幾階、不會變形；選取後點尺寸可以改階數、上／下
+  stairStraight: { cat: "stair", stair: "straight", name: "直梯", w: 90, h: 300, draw: (m, t) => stairDraw("straight", 90, 300, 0, false, m, t) },
+  stairL: { cat: "stair", stair: "L", name: "L 型梯", w: 220, h: 300, draw: (m, t) => stairDraw("L", 220, 300, 0, false, m, t) },
+  stairU: { cat: "stair", stair: "U", name: "U 型迴轉梯", w: 200, h: 280, draw: (m, t) => stairDraw("U", 200, 280, 0, false, m, t) },
 };
 /* ------------------------- 符號庫結束 ------------------------- */
 
@@ -1987,9 +2069,11 @@ function symCenter(it) {
 function symTransform(it) {
   const [W, H] = symSize(it);
   const flip = it.flip ? `translate(${W},0) scale(-1,1)` : "";
+  if (isStair(it)) return `translate(${it.x},${it.y}) rotate(${it.rot},${W / 2},${H / 2}) ${flip} scale(${PX_PER_CM})`;   // 樓梯：用實際公分畫，不拉伸
   return `translate(${it.x},${it.y}) rotate(${it.rot},${W / 2},${H / 2}) ${flip} scale(${PX_PER_CM * it.sx},${PX_PER_CM * it.sy})`;
 }
 function symInner(it) {
+  if (isStair(it)) { const [w, d] = symCm(it); return stairDraw(SYMBOLS[it.key].stair, w, d, it.steps, it.down, SYM_LINE / PX_PER_CM, (SYM_LINE * 0.55) / PX_PER_CM); }
   // 換算線粗：讓符號縮放後，外框線在畫布上都是 SYM_LINE 粗
   const k = PX_PER_CM * Math.min(it.sx, it.sy);
   return SYMBOLS[it.key].draw(SYM_LINE / k, (SYM_LINE * 0.55) / k);
@@ -2508,7 +2592,7 @@ function renderOverlay() {
   if (it.type === "img") $("selOpacity").textContent = `透明度 ${Math.round((it.opacity ?? 1) * 100)}%`;
   const isRealSym = it.type === "sym" && SYMBOLS[it.key];
   $("selSize").style.display = $("selSizeSep").style.display = isRealSym ? "" : "none";
-  if (isRealSym) { const [w, d] = symCm(it); $("selSizeTxt").textContent = `${fmtCm(w)} × ${fmtCm(d)} cm`; }
+  if (isRealSym) { const [w, d] = symCm(it); $("selSizeTxt").textContent = `${fmtCm(w)} × ${fmtCm(d)} cm` + (isStair(it) ? `・${stairTotal(it)} 階・${it.down ? "下" : "上"}` : ""); }
   $("selRotate").style.display = isSym || isText ? "" : "none";
   $("selFlip").style.display = isSym ? "" : "none";
   $("selFree").style.display = "none";   // 改成四角＋四邊把手後，不用再切換自由拉伸
@@ -3672,7 +3756,7 @@ $("folderColorClose").addEventListener("click", () => $("folderColorModal").clas
    上方分類標籤：全部／衛浴／門窗／收納家電／我的符號
    「✎ 排序」：每個符號下面有 ◀ ▶ 移動、👁 隱藏；排序和隱藏會記住（ui.trayOrder、ui.trayHidden）
    符號用代號表示：內建的是 SYMBOLS 的 key，我的符號是 "my:" + id */
-const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["bedroom", "臥室"], ["living", "客廳"], ["kitchen", "廚房"], ["storage", "收納家電"], ["mine", "我的符號"]];
+const TRAY_CATS = [["all", "全部"], ["bath", "衛浴"], ["door", "門窗"], ["stair", "樓梯"], ["bedroom", "臥室"], ["living", "客廳"], ["kitchen", "廚房"], ["storage", "收納家電"], ["mine", "我的符號"]];
 let trayCat = "all", trayEditing = false;
 function trayKeys() {
   // 全部的代號，照使用者排的順序；新加的符號接在最後
@@ -4611,13 +4695,24 @@ function symSizeLabel(it) {
   const [w, d] = symCm(it);
   return `<text x="${cx}" y="${cy + hy + 16}" font-size="18" font-weight="600" fill="${DIM_COLOR}" stroke="#fff" stroke-width="4" paint-order="stroke" text-anchor="middle" dominant-baseline="hanging">${fmtCm(w)}×${fmtCm(d)}</text>`;
 }
-let symSizeId = null;
+let symSizeId = null, stairDirSel = "up";
+function refreshStairDir() { document.querySelectorAll("#stairDir button").forEach((b) => b.classList.toggle("on", b.dataset.v === stairDirSel)); }
+document.querySelectorAll("#stairDir button").forEach((b) => b.addEventListener("click", () => { stairDirSel = b.dataset.v; refreshStairDir(); }));
 function openSymSize(it) {
   symSizeId = it.id;
   const [w, d] = symCm(it);
   $("symSizeTitle").textContent = `${SYMBOLS[it.key].name}　尺寸`;
   $("symW").value = fmtCm(w); $("symD").value = fmtCm(d);
   $("symShowSize").checked = !!it.showSize;
+  // 樓梯：寬／長、階數（空白＝自動）、上／下
+  const st = isStair(it);
+  $("stairOpts").classList.toggle("show", st);
+  document.querySelector('label[for="symD"]').textContent = st ? "長" : "深";
+  if (st) {
+    $("stairSteps").value = it.steps || "";
+    $("stairAuto").textContent = `階（自動是 ${stairCounts(SYMBOLS[it.key].stair, w, d, 0).reduce((a, b) => a + b, 0)}）`;
+    stairDirSel = it.down ? "down" : "up"; refreshStairDir();
+  }
   $("symSizeModal").classList.add("show");
 }
 function closeSymSize() { if (calc.fromField) closeCalc(); $("symSizeModal").classList.remove("show"); symSizeId = null; }
@@ -4639,9 +4734,15 @@ $("symSizeOk").addEventListener("click", () => {
   const w = evalMath(cleanDimValue($("symW").value)), d = evalMath(cleanDimValue($("symD").value));
   if (!(w > 0) || !(d > 0)) { toast("寬和深都要打大於 0 的數字"); return; }
   if (w > 5000 || d > 5000) { toast("尺寸太大了（最大 5000 cm）"); return; }
+  let steps = 0;
+  if (isStair(it)) {
+    const sv = $("stairSteps").value.trim();
+    if (sv) { steps = Math.round(Number(sv.replace(/[^\d.]/g, ""))); if (!(steps >= 2 && steps <= 60)) { toast("階數請打 2～60，或留空白＝自動"); return; } }
+  }
   pushUndo();
   setSymCm(it, w, d);
   it.showSize = $("symShowSize").checked || undefined;
+  if (isStair(it)) { if (steps) it.steps = steps; else delete it.steps; if (stairDirSel === "down") it.down = true; else delete it.down; }
   closeSymSize();
   afterChange(); renderOverlay();
 });
@@ -6405,8 +6506,12 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.11.2";
+const APP_VERSION = "2026.11.11.3";
 const CHANGELOG = [
+  ["2026.11.11.3", [
+    "新增「樓梯」圖塊（下方符號列的「樓梯」）：直梯、L 型梯、U 型迴轉梯，照 CAD 平面圖畫法（踏面線、折斷線、上／下箭頭）",
+    "樓梯拉長會自動多幾階、不會變形；選取後點下面的尺寸，可以打寬×長、階數、改成「下」",
+  ]],
   ["2026.11.11.2", [
     "新增「螢光筆」：半透明標重點，5 種顏色、3 種粗細，畫完停住一樣會拉直",
     "可以「鎖定」照片（或任何東西）：選取後按「鎖定」，之後拖它只會移動畫面，不會拖走",
