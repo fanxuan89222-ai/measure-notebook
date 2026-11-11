@@ -636,6 +636,30 @@
   .chipPres { display: flex; gap: 2px; padding: 3px; background: var(--ground2); border-radius: 11px; flex: 0 0 auto; }
   .chipPres button { min-width: 38px; height: 32px; padding: 0 8px; border: none; border-radius: 8px; background: transparent; color: var(--ink2); font-size: 14px; }
   .chipPres button.on { background: #fff; color: var(--ink); font-weight: 700; box-shadow: 0 1px 3px rgba(30,42,68,0.16); }
+  /* ===== 裁切照片 ===== */
+  #cropBox { position: fixed; inset: 0; z-index: 110; background: rgba(18,24,40,0.92); display: none; flex-direction: column; padding: 16px 20px 20px; gap: 12px; }
+  #cropBox.show { display: flex; }
+  .cropTop { display: flex; align-items: baseline; gap: 12px; color: #fff; }
+  .cropTop b { font-size: 18px; }
+  .cropTop span { font-size: 14px; color: rgba(255,255,255,.75); }
+  .cropStage { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 0; }
+  .cropImgWrap { position: relative; line-height: 0; touch-action: none; -webkit-user-select: none; user-select: none;
+    background: repeating-conic-gradient(#d9dde5 0 25%, #fff 0 50%) 0 0 / 20px 20px; }
+  .cropImgWrap.flip { transform: scaleX(-1); }
+  #cropImg { max-width: calc(100vw - 80px); max-height: calc(100vh - 170px); display: block; pointer-events: none; }
+  #cropRect { position: absolute; border: 2px solid #fff; box-shadow: 0 0 0 9999px rgba(18,24,40,0.55); cursor: move; touch-action: none; }
+  #cropRect::before, #cropRect::after { content: ""; position: absolute; inset: 33.33% 0; border-top: 1px solid rgba(255,255,255,.45); border-bottom: 1px solid rgba(255,255,255,.45); pointer-events: none; }
+  #cropRect::after { inset: 0 33.33%; border: none; border-left: 1px solid rgba(255,255,255,.45); border-right: 1px solid rgba(255,255,255,.45); }
+  #cropRect i { position: absolute; width: 30px; height: 30px; z-index: 1; }
+  #cropRect i::after { content: ""; position: absolute; left: 9px; top: 9px; width: 12px; height: 12px; background: #fff; border-radius: 3px; box-shadow: 0 1px 3px rgba(0,0,0,.4); }
+  #cropRect i[data-h="nw"] { left: -15px; top: -15px; } #cropRect i[data-h="ne"] { right: -15px; top: -15px; }
+  #cropRect i[data-h="sw"] { left: -15px; bottom: -15px; } #cropRect i[data-h="se"] { right: -15px; bottom: -15px; }
+  #cropRect i[data-h="n"] { left: calc(50% - 15px); top: -15px; } #cropRect i[data-h="s"] { left: calc(50% - 15px); bottom: -15px; }
+  #cropRect i[data-h="w"] { top: calc(50% - 15px); left: -15px; } #cropRect i[data-h="e"] { top: calc(50% - 15px); right: -15px; }
+  #cropRect i[data-h="n"]::after, #cropRect i[data-h="s"]::after { width: 20px; height: 6px; left: 5px; top: 12px; }
+  #cropRect i[data-h="w"]::after, #cropRect i[data-h="e"]::after { width: 6px; height: 20px; left: 12px; top: 5px; }
+  .cropBtns { display: flex; gap: 8px; }
+  .cropBtns .btn { min-width: 96px; }
   /* ===================== 計算機（浮動面板，可以拖） ===================== */
   #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
     background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
@@ -739,6 +763,7 @@
   <!-- 「更多」選單：不常用、比較危險的動作收在這裡 -->
   <div class="popMenu" id="moreMenu">
     <button id="btnHelpMenu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>使用說明（示範短片）</button>
+    <button id="btnPasteImg"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 12l2.5 2.5L15 10"/></svg>貼上圖片（保留去背）</button>
     <button id="btnNew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新平面圖（開新分頁）</button>
     <hr>
     <button id="btnClear" class="danger"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>清除畫面</button>
@@ -774,7 +799,7 @@
     <button class="tool" id="btnImage" title="加入照片或圖片">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>圖片
     </button>
-    <input type="file" id="imgInput" accept="image/*" hidden>
+    <input type="file" id="imgInput" accept="image/png,image/heic,image/heif,image/jpeg,image/webp,image/gif,image/*" hidden>
   </nav>
 
   <!-- ========== 畫布 ========== -->
@@ -910,6 +935,8 @@
       <button id="selFree"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 15v5h-5"/><path d="M4 4l6 6M20 20l-6-6"/></svg>自由拉伸</button>
       <button id="selEdit"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M12 6v13"/></svg>編輯文字</button>
       <button id="selFill">填色</button>
+      <button id="selCrop" title="裁切照片"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2v14a2 2 0 0 0 2 2h14"/><path d="M18 22V8a2 2 0 0 0-2-2H2"/></svg>裁切</button>
+      <button id="selCutWhite" title="把白色背景變透明"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h16"/><path d="M7 16l9-9 3 3-9 9H7z"/><path d="M14 9l3 3"/></svg><span id="selCutWhiteTxt">去白底</span></button>
       <button id="selOpacity">透明度</button>
       <button id="selSaveSym"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1L3.2 9.5l6.1-.9z"/></svg>存成我的符號</button>
       <span class="sbSep"></span>
@@ -1142,6 +1169,20 @@
     <div id="helpGestures" class="gestures"></div>
     <div class="row"><button class="btn" id="helpClose">關閉</button></div>
   </div>
+</div>
+
+<!-- 裁切照片 -->
+<div id="cropBox">
+  <div class="cropTop"><b>裁切照片</b><span>拖四個角或四邊調整範圍，拖中間移動</span></div>
+  <div class="cropStage" id="cropStage">
+    <div class="cropImgWrap" id="cropImgWrap">
+      <img id="cropImg" alt="">
+      <div id="cropRect">
+        <i data-h="nw"></i><i data-h="n"></i><i data-h="ne"></i><i data-h="e"></i><i data-h="se"></i><i data-h="s"></i><i data-h="sw"></i><i data-h="w"></i>
+      </div>
+    </div>
+  </div>
+  <div class="cropBtns"><button class="btn" id="cropReset">還原整張</button><span style="flex:1"></span><button class="btn" id="cropCancel">取消</button><button class="btn primary" id="cropOk">完成</button></div>
 </div>
 
 <div id="vidBox"></div>
@@ -1812,9 +1853,9 @@ function saveMySyms() { dbPut("kv", { id: "mySyms", v: mySyms }); return true; }
 // 刪掉圖之後，清掉沒有任何一張圖在用的照片
 async function cleanAssets() {
   const used = new Set();
-  for (const r of await dbAll("docs")) for (const it of (r.data && r.data.items) || []) if (it.type === "img") used.add(it.asset);
-  for (const t of tabs) for (const it of t.doc.items) if (it.type === "img") used.add(it.asset);
-  for (const it of doc.items) if (it.type === "img") used.add(it.asset);
+  for (const r of await dbAll("docs")) for (const it of (r.data && r.data.items) || []) if (it.type === "img") { used.add(it.asset); if (it.origAsset) used.add(it.origAsset); }
+  for (const t of tabs) for (const it of t.doc.items) if (it.type === "img") { used.add(it.asset); if (it.origAsset) used.add(it.origAsset); }
+  for (const it of doc.items) if (it.type === "img") { used.add(it.asset); if (it.origAsset) used.add(it.origAsset); }
   for (const k of Object.keys(assets)) if (!used.has(k)) { delete assets[k]; dbDel("assets", k); }
 }
 
@@ -2053,7 +2094,10 @@ function itemSvg(it, forExport) {
     const flip = it.flip ? ` translate(${W},0) scale(-1,1)` : "";
     const src = assets[it.asset] || "";
     return `<g${hit} transform="translate(${it.x},${it.y}) rotate(${it.rot},${W / 2},${H / 2})${flip}">`
-      + `<image href="${src}" width="${W}" height="${H}" preserveAspectRatio="none" opacity="${it.opacity ?? 1}"/>`
+      + (it.crop
+        // 裁切過：只顯示原圖的一部分（crop = [左, 上, 寬, 高]，都是 0～1 的比例）
+        ? `<svg width="${W}" height="${H}" viewBox="${it.crop.join(" ")}" preserveAspectRatio="none"><image href="${src}" width="1" height="1" preserveAspectRatio="none" opacity="${it.opacity ?? 1}"/></svg>`
+        : `<image href="${src}" width="${W}" height="${H}" preserveAspectRatio="none" opacity="${it.opacity ?? 1}"/>`)
       + (forExport ? "" : `<rect width="${W}" height="${H}" fill="transparent"/>`) + `</g>`;
   }
   if (it.type === "text") {
@@ -2419,6 +2463,8 @@ function renderOverlay() {
   if (it.type === "shape") { $("shapeWidthSlider").value = it.width; $("shapeNum").value = it.width; }
   if (isShapeBox(it)) $("selFill").textContent = `填色：${{ none: "不填", tint: "淡色", solid: "實心" }[it.fill || "none"]}`;   // 這顆沒有圖示
   $("selOpacity").style.display = it.type === "img" ? "" : "none";
+  $("selCrop").style.display = $("selCutWhite").style.display = it.type === "img" ? "" : "none";
+  if (it.type === "img") $("selCutWhiteTxt").textContent = it.origAsset ? "還原白底" : "去白底";
   $("selSaveSym").style.display = it.type === "img" ? "" : "none";
   if (it.type === "img") $("selOpacity").textContent = `透明度 ${Math.round((it.opacity ?? 1) * 100)}%`;
   const isRealSym = it.type === "sym" && SYMBOLS[it.key];
@@ -3872,7 +3918,15 @@ $("imgInput").addEventListener("change", async (e) => {
     toast("這個檔案打不開，請換 JPG 或 PNG");
   }
 });
-// 讀圖片：太大的照片先縮小（最長邊 1600），省 iPad 空間；PNG 保留透明背景
+// 這張圖有沒有透明的地方（每隔幾個像素抽查，很快）
+function hasTransparency(c) {
+  try {
+    const d = c.getContext("2d").getImageData(0, 0, c.width, c.height).data;
+    for (let i = 3; i < d.length; i += 4 * 7) if (d[i] < 250) return true;
+  } catch (e) { return true; }
+  return false;
+}
+// 讀圖片：太大的照片先縮小（最長邊 1600），省 iPad 空間；有透明背景就保留
 function loadImageFile(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -3889,7 +3943,8 @@ function loadImageFile(file) {
         const c = document.createElement("canvas");
         c.width = Math.round(w * k); c.height = Math.round(h * k);
         c.getContext("2d").drawImage(img, 0, 0, c.width, c.height);
-        const keepAlpha = file.type === "image/png" || file.type === "image/gif" || file.type === "image/webp" || isSvg;
+        // 去背的照片（PNG／HEIC 貼紙）有透明的地方：一定要存成 PNG，存成 JPG 透明會變白底
+        const keepAlpha = isSvg || hasTransparency(c);
         resolve({ src: keepAlpha ? c.toDataURL("image/png") : c.toDataURL("image/jpeg", 0.85), w: c.width, h: c.height });
       };
       img.src = reader.result;
@@ -3924,13 +3979,174 @@ $("selOpacity").addEventListener("click", () => {
 // 存成「我的符號」：之後每張圖都能從下方符號列直接拿來用
 $("selSaveSym").addEventListener("click", () => {
   const it = selected(); if (!it || it.type !== "img") return;
-  openTextDialog("", (name) => {
+  openTextDialog("", async (name) => {
     if (!name) return;
     const [W, H] = symSize(it);
-    mySyms.push({ id: "S" + Date.now().toString(36), name: name.slice(0, 8), src: assets[it.asset], w: W, h: H });
+    const src = it.crop ? await bakeCrop(assets[it.asset], it.crop) : assets[it.asset];   // 裁切過：只存裁下來那塊
+    mySyms.push({ id: "S" + Date.now().toString(36), name: name.slice(0, 8), src, w: W, h: H });
     if (saveMySyms()) { buildTray(); toast(`已存成「${name.slice(0, 8)}」，在下方符號列最後面`); }
     else mySyms.pop();
   }, "幫這個符號取名字", "sym");
+});
+
+/* ---------- 照片：裁切 ----------
+   不會真的剪掉原圖：只記住要顯示原圖的哪一塊（crop），所以之後還能重新裁、還原整張。 */
+let cropState = null;
+function openCrop(it) {
+  const src = assets[it.asset]; if (!src) return;
+  const c = it.crop || [0, 0, 1, 1];
+  cropState = { id: it.id, c: c.slice(), flip: !!it.flip };
+  $("cropImg").src = src;
+  $("cropImgWrap").classList.toggle("flip", !!it.flip);
+  $("cropBox").classList.add("show");
+  drawCropRect();
+}
+function drawCropRect() {
+  const [x, y, w, h] = cropState.c, r = $("cropRect").style;
+  r.left = x * 100 + "%"; r.top = y * 100 + "%"; r.width = w * 100 + "%"; r.height = h * 100 + "%";
+}
+(() => {
+  let drag = null;
+  const MIN = 0.04;
+  $("cropRect").addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    const box = $("cropImgWrap").getBoundingClientRect();
+    drag = { h: e.target.dataset.h || "move", sx: e.clientX, sy: e.clientY, c0: cropState.c.slice(), bw: box.width, bh: box.height, id: e.pointerId };
+    $("cropRect").setPointerCapture(e.pointerId);
+  });
+  $("cropRect").addEventListener("pointermove", (e) => {
+    if (!drag || e.pointerId !== drag.id) return;
+    let dx = (e.clientX - drag.sx) / drag.bw, dy = (e.clientY - drag.sy) / drag.bh;
+    if (cropState.flip) dx = -dx;   // 鏡像過的照片：左右相反
+    let [x, y, w, h] = drag.c0, H = drag.h;
+    if (cropState.flip) H = H.replace(/[ew]/g, (m) => (m === "e" ? "w" : "e"));
+    if (H === "move") { x = Math.min(1 - w, Math.max(0, x + dx)); y = Math.min(1 - h, Math.max(0, y + dy)); }
+    else {
+      let x2 = x + w, y2 = y + h;
+      if (H.includes("w")) x = Math.min(x2 - MIN, Math.max(0, x + dx));
+      if (H.includes("e")) x2 = Math.max(x + MIN, Math.min(1, x2 + dx));
+      if (H.includes("n")) y = Math.min(y2 - MIN, Math.max(0, y + dy));
+      if (H.includes("s")) y2 = Math.max(y + MIN, Math.min(1, y2 + dy));
+      w = x2 - x; h = y2 - y;
+    }
+    cropState.c = [x, y, w, h]; drawCropRect();
+  });
+  const end = () => { drag = null; };
+  $("cropRect").addEventListener("pointerup", end); $("cropRect").addEventListener("pointercancel", end);
+})();
+$("cropReset").addEventListener("click", () => { cropState.c = [0, 0, 1, 1]; drawCropRect(); });
+$("cropCancel").addEventListener("click", () => { $("cropBox").classList.remove("show"); cropState = null; });
+$("cropOk").addEventListener("click", () => {
+  const it = doc.items.find((i) => i.id === cropState.id);
+  $("cropBox").classList.remove("show");
+  if (!it) { cropState = null; return; }
+  const o = it.crop || [0, 0, 1, 1], n = cropState.c.map((v) => Math.round(v * 10000) / 10000);
+  cropState = null;
+  if (n.every((v, i) => Math.abs(v - o[i]) < 1e-4)) return;
+  pushUndo();
+  // 畫面上「每 1 單位原圖」有多大：裁切後保持照片的比例尺不變，裁下來的那塊留在原地
+  const kx = it.bw / o[2], ky = it.bh / o[3];
+  const [cx, cy] = symCenter(it);
+  let lx = ((n[0] + n[2] / 2) - (o[0] + o[2] / 2)) * kx * it.sx, ly = ((n[1] + n[3] / 2) - (o[1] + o[3] / 2)) * ky * it.sy;
+  if (it.flip) lx = -lx;
+  const a = (it.rot || 0) * Math.PI / 180;
+  const ncx = cx + lx * Math.cos(a) - ly * Math.sin(a), ncy = cy + lx * Math.sin(a) + ly * Math.cos(a);
+  it.bw = kx * n[2]; it.bh = ky * n[3];
+  if (n[0] === 0 && n[1] === 0 && n[2] === 1 && n[3] === 1) delete it.crop; else it.crop = n;
+  const [W, H] = symSize(it);
+  it.x = ncx - W / 2; it.y = ncy - H / 2;
+  afterChange(); renderOverlay();
+});
+$("selCrop").addEventListener("click", () => { const it = selected(); if (it && it.type === "img") openCrop(it); });
+
+// 把裁切的範圍真的剪成一張新圖（存成我的符號時用）
+function bakeCrop(src, cr) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"), w = img.naturalWidth, h = img.naturalHeight;
+      c.width = Math.max(1, Math.round(w * cr[2])); c.height = Math.max(1, Math.round(h * cr[3]));
+      c.getContext("2d").drawImage(img, -w * cr[0], -h * cr[1]);
+      resolve(c.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+/* ---------- 照片：去白底 ----------
+   從照片四周往裡找「接近白色、連在一起」的地方變透明（中間白色的東西不會被挖掉）。
+   原圖會留著，按「還原白底」就回來。 */
+function cutWhite(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"), w = c.width = img.naturalWidth, h = c.height = img.naturalHeight;
+      const g = c.getContext("2d"); g.drawImage(img, 0, 0);
+      const im = g.getImageData(0, 0, w, h), d = im.data;
+      // 接近白色：夠亮、而且幾乎沒有顏色（灰白也算）
+      const whiteish = (i) => { const r = d[i], gg = d[i + 1], b = d[i + 2]; return d[i + 3] > 0 && Math.min(r, gg, b) > 222 && Math.max(r, gg, b) - Math.min(r, gg, b) < 28; };
+      const seen = new Uint8Array(w * h), stack = [];
+      const push = (x, y) => { const p = y * w + x; if (!seen[p] && whiteish(p * 4)) { seen[p] = 1; stack.push(p); } };
+      for (let x = 0; x < w; x++) { push(x, 0); push(x, h - 1); }
+      for (let y = 0; y < h; y++) { push(0, y); push(w - 1, y); }
+      while (stack.length) {
+        const p = stack.pop(), x = p % w, y = (p - x) / w;
+        d[p * 4 + 3] = 0;
+        if (x > 0) push(x - 1, y); if (x < w - 1) push(x + 1, y); if (y > 0) push(x, y - 1); if (y < h - 1) push(x, y + 1);
+      }
+      // 邊緣柔一點：挨著透明區的淺色像素半透明，才不會有白邊
+      for (let y = 1; y < h - 1; y++) for (let x = 1; x < w - 1; x++) {
+        const p = y * w + x; if (seen[p]) continue;
+        if (seen[p - 1] || seen[p + 1] || seen[p - w] || seen[p + w]) {
+          const i = p * 4, lum = (d[i] + d[i + 1] + d[i + 2]) / 3;
+          if (lum > 190) d[i + 3] = Math.min(d[i + 3], Math.round(255 * (255 - lum) / 65));
+        }
+      }
+      g.putImageData(im, 0, 0);
+      resolve(c.toDataURL("image/png"));
+    };
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+$("selCutWhite").addEventListener("click", async () => {
+  const it = selected(); if (!it || it.type !== "img") return;
+  if (it.origAsset) {   // 還原
+    pushUndo(); it.asset = it.origAsset; delete it.origAsset; afterChange(); renderOverlay(); return;
+  }
+  try {
+    const out = await cutWhite(assets[it.asset]);
+    const id = "A" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    putAsset(id, out);
+    pushUndo(); it.origAsset = it.asset; it.asset = id; afterChange(); renderOverlay();
+    toast("白色背景去掉了（中間的白色不會被挖掉）");
+  } catch (e) { toast("這張照片處理不了，請換一張試試"); }
+});
+
+/* ---------- 貼上圖片 ----------
+   iPad 照片長按主體「拷貝」（去背的貼紙），回到這裡按「⋯ → 貼上圖片」：透明背景會保留。 */
+async function insertImageBlob(blob) {
+  const { src, w, h } = await loadImageFile(new File([blob], "paste", { type: blob.type || "image/png" }));
+  insertImage(src, w, h);
+}
+document.addEventListener("paste", async (e) => {
+  if (document.body.classList.contains("inLibrary")) return;
+  const a = document.activeElement; if (a && (a.tagName === "INPUT" || a.tagName === "TEXTAREA")) return;
+  const f = [...(e.clipboardData ? e.clipboardData.items : [])].find((x) => x.type.startsWith("image/"));
+  if (!f) return;
+  e.preventDefault();
+  try { await insertImageBlob(f.getAsFile()); } catch (err) { toast("貼不上這張圖"); }
+});
+$("btnPasteImg").addEventListener("click", async () => {
+  $("moreMenu").classList.remove("show");
+  try {
+    const items = await navigator.clipboard.read();
+    for (const ci of items) {
+      const t = ci.types.find((x) => x.startsWith("image/"));
+      if (t) { await insertImageBlob(await ci.getType(t)); return; }
+    }
+    toast("剪貼簿裡沒有圖片：先到照片長按主體，選「拷貝」");
+  } catch (err) { toast("沒辦法讀剪貼簿：請允許貼上，或改用「圖片」匯入"); }
 });
 
 /* ===================== 工具切換 ===================== */
@@ -6071,8 +6287,14 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.10.2";
+const APP_VERSION = "2026.11.11.1";
 const CHANGELOG = [
+  ["2026.11.11.1", [
+    "匯入的照片可以「裁切」：選取照片後按下面的「裁切」，拖四角四邊調範圍，之後也能重新裁或還原整張",
+    "照片可以「去白底」：白色背景一鍵變透明，不滿意按「還原白底」",
+    "去背過的照片（有透明的地方）會保留透明，不再變成白底",
+    "iPad 照片長按主體「拷貝」後，到「⋯ 更多 → 貼上圖片」，去背效果會保留",
+  ]],
   ["2026.11.10.2", [
     "拖曳柱子、符號、文字時會出現粉紅色對齊線：中心或邊對到別的東西就會自動吸過去，對稱的柱子一拖就對齊",
     "小技巧：要兩根一樣大的柱子，畫好一根後按「複製」再拖過去",
