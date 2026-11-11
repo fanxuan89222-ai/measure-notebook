@@ -235,17 +235,18 @@
   }
   .tool:hover { background: var(--ground); color: var(--ink); }
   .tool svg { width: 23px; height: 23px; }
-  /* 橫放 iPad 高度比較矮：工具按鈕稍微扁一點，全部擠得下（多了螢光筆） */
-  @media (max-height: 900px) { #app:not(.tb-top):not(.tb-bottom) .tool { height: 45px; } #app:not(.tb-top):not(.tb-bottom) .tool svg { width: 21px; height: 21px; } }
+  /* 很矮的螢幕（分割畫面）才把按鈕壓扁一點 */
+  @media (max-height: 700px) { #app:not(.tb-top):not(.tb-bottom) .tool { height: 44px; } #app:not(.tb-top):not(.tb-bottom) .tool svg { width: 21px; height: 21px; } }
   /* 選中的工具：上釉的深藍磁磚 */
   .tool.on { background: var(--navy); color: #fff; box-shadow: var(--glazed); }
 
   /* 四格常用色：小磁磚，直的時候排成 2×2 */
-  #colorSlots { display: grid; grid-template-columns: repeat(2, 24px); gap: 6px; padding: 4px 0; }
-  #app.tb-top #colorSlots, #app.tb-bottom #colorSlots { grid-template-columns: repeat(4, 28px); padding: 0 4px; }
-  #colorSlots .swatch { width: 24px; height: 24px; padding: 0; border: none; border-radius: 7px; position: relative; background: transparent; }
-  #app.tb-top #colorSlots .swatch, #app.tb-bottom #colorSlots .swatch { width: 28px; height: 28px; }
-  #colorSlots .swatch i { position: absolute; inset: 0; width: auto; height: auto; border-radius: 7px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.08); }
+  #colorSlots { display: grid; grid-template-columns: repeat(4, 40px); gap: 10px; padding: 8px 8px 6px; }
+  #colorSlots .swatch { width: 40px; height: 40px; padding: 0; border: none; border-radius: 10px; position: relative; background: transparent; }
+  #colorPop { min-width: 0; }
+  /* 工具列上的「顏色」：一顆目前顏色的小磁磚 */
+  .tool .cdot { width: 22px; height: 22px; border-radius: 7px; display: block; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.1); }
+  #colorSlots .swatch i { position: absolute; inset: 0; width: auto; height: auto; border-radius: 10px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -2px 0 rgba(0,0,0,0.2), inset 0 0 0 1px rgba(0,0,0,0.08); }
   #colorSlots .swatch.on { outline: none; box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--navy); }
   .colorDot { width: 26px; height: 26px; border-radius: 50%; display: block; border: 2px solid rgba(0,0,0,0.12); }
   .swatch { width: 64px; height: 34px; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
@@ -771,8 +772,14 @@
     <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
   </header>
   <!-- 「更多」選單：不常用、比較危險的動作收在這裡 -->
+  <!-- 顏色小視窗：四格常用色＋更多顏色 -->
+  <div class="popMenu" id="colorPop">
+    <div id="colorSlots"></div>
+    <button id="colorMore"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="8.5" cy="10" r="1.3" fill="currentColor"/><circle cx="12" cy="7.5" r="1.3" fill="currentColor"/><circle cx="15.5" cy="10" r="1.3" fill="currentColor"/><path d="M12 21a3 3 0 0 1 0-6h2"/></svg>更多顏色／換這格的顏色</button>
+  </div>
   <div class="popMenu" id="moreMenu">
     <button id="btnHelpMenu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>使用說明（示範短片）</button>
+    <button id="btnImage"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>匯入照片／圖片</button>
     <button id="btnPasteImg"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M9 12l2.5 2.5L15 10"/></svg>貼上圖片（保留去背）</button>
     <button id="btnNew"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>新平面圖（開新分頁）</button>
     <hr>
@@ -806,12 +813,8 @@
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M14 4l6 6-9 9H6l-3-3z"/><path d="M9 9l6 6"/></svg>橡皮擦
     </button>
     <div class="sep"></div>
-    <!-- 四格常用色：點一下換顏色，已選的再點一下＝改這格的顏色 -->
-    <div id="colorSlots"></div>
-    <div class="sep"></div>
-    <button class="tool" id="btnImage" title="加入照片或圖片">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M4 18l5-5 4 4 3-3 4 4"/></svg>圖片
-    </button>
+    <!-- 顏色：工具列只放一顆（目前的顏色），點開才看到四格常用色，工具列才不會擠 -->
+    <button class="tool" id="btnColor" title="顏色"><span class="cdot" id="colorDot"></span>顏色</button>
     <input type="file" id="imgInput" accept="image/png,image/heic,image/heif,image/jpeg,image/webp,image/gif,image/*" hidden>
   </nav>
 
@@ -4424,6 +4427,7 @@ function renderMyPalette() {
 $("myEdit").addEventListener("click", () => { myEditing = !myEditing; renderMyPalette(); });
 function renderColorSlots() {
   const box = $("colorSlots");
+  $("colorDot").style.background = ui.colorSlots[ui.colorIdx] || ui.color;
   box.innerHTML = "";
   ui.colorSlots.forEach((c, i) => {
     const b = document.createElement("button");
@@ -4431,18 +4435,40 @@ function renderColorSlots() {
     b.title = i === ui.colorIdx ? "再點一次可以換這格的顏色" : c;
     b.innerHTML = `<i style="background:${c}"></i>`;
     b.addEventListener("click", () => {
-      if (i === ui.colorIdx) { openPalette(); return; }   // 已選的再點一次 → 打開色盤改這格
+      if (i === ui.colorIdx) { closeColorPop(); openPalette(); return; }   // 已選的再點一次 → 打開色盤改這格
       ui.colorIdx = i;
       // 選取中的線條或文字也一起換成這格的顏色
       ui.color = c;
       const it = doc.items.find((x) => x.id === ui.selectedId);
       if (it && (it.type === "text" || it.type === "stroke" || it.type === "shape") && it.color !== c) { pushUndo(); it.color = c; afterChange(); }
       renderColorSlots(); save();
-      if (!ui.slotHintShown) { ui.slotHintShown = true; toast("再點一次同一格，可以換這格的顏色"); }
+      closeColorPop();
     });
     box.appendChild(b);
   });
 }
+// 顏色小視窗：放在「顏色」按鈕旁邊（工具列在左邊＝放右邊；在上面＝放下面；在下面＝放上面）
+function openColorPop() {
+  const m = $("colorPop"), r = $("btnColor").getBoundingClientRect();
+  m.classList.add("show");
+  const w = m.offsetWidth, h = m.offsetHeight, W = innerWidth, H = innerHeight;
+  let x = r.right + 10, y = r.top + r.height / 2 - h / 2;
+  if (x + w > W - 8) x = r.left - w - 10;
+  if ($("app").classList.contains("tb-top")) { x = r.left + r.width / 2 - w / 2; y = r.bottom + 8; }
+  if ($("app").classList.contains("tb-bottom")) { x = r.left + r.width / 2 - w / 2; y = r.top - h - 8; }
+  m.style.left = Math.max(8, Math.min(W - w - 8, x)) + "px";
+  m.style.top = Math.max(8, Math.min(H - h - 8, y)) + "px";
+  m.style.right = "auto";
+}
+function closeColorPop() { $("colorPop").classList.remove("show"); }
+$("btnColor").addEventListener("click", (e) => { e.stopPropagation(); $("colorPop").classList.contains("show") ? closeColorPop() : openColorPop(); });
+$("colorMore").addEventListener("click", () => { closeColorPop(); openPalette(); });
+// 點外面＝關掉（這一下不會在畫布上畫東西）
+document.addEventListener("pointerdown", (e) => {
+  if (!$("colorPop").classList.contains("show") || e.target.closest("#colorPop, #btnColor")) return;
+  closeColorPop();
+  if (e.target.closest("#stage")) { e.stopPropagation(); e.preventDefault(); swallowClick = true; }
+}, true);
 function openPalette() {
   $("customColor").value = /^#[0-9a-f]{6}$/i.test(ui.color) ? ui.color : "#1a1a1a";
   myEditing = false; renderMyPalette();
@@ -6506,8 +6532,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.11.3";
+const APP_VERSION = "2026.11.11.4";
 const CHANGELOG = [
+  ["2026.11.11.4", [
+    "左邊工具列整理：四格顏色收成一顆「顏色」，點開再選；「匯入照片」移到「⋯ 更多」（下方符號列最前面也有）",
+  ]],
   ["2026.11.11.3", [
     "新增「樓梯」圖塊（下方符號列的「樓梯」）：直梯、L 型梯、U 型迴轉梯，照 CAD 平面圖畫法（踏面線、折斷線、上／下箭頭）",
     "樓梯拉長會自動多幾階、不會變形；選取後點下面的尺寸，可以打寬×長、階數、改成「下」",
