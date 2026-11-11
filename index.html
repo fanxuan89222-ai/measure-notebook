@@ -235,6 +235,8 @@
   }
   .tool:hover { background: var(--ground); color: var(--ink); }
   .tool svg { width: 23px; height: 23px; }
+  /* 橫放 iPad 高度比較矮：工具按鈕稍微扁一點，全部擠得下（多了螢光筆） */
+  @media (max-height: 900px) { #app:not(.tb-top):not(.tb-bottom) .tool { height: 45px; } #app:not(.tb-top):not(.tb-bottom) .tool svg { width: 21px; height: 21px; } }
   /* 選中的工具：上釉的深藍磁磚 */
   .tool.on { background: var(--navy); color: #fff; box-shadow: var(--glazed); }
 
@@ -362,19 +364,19 @@
   #app.tb-top #zoomBox #btnZoomFit, #app.tb-bottom #zoomBox #btnZoomFit { padding: 0; width: 38px; font-size: 12px; }
 
   /* 工具的選項列（畫筆粗細、橡皮擦大小、牆厚、尺寸樣式、圖形）：畫布上方中間的膠囊 */
-  #eraserBar, #wallBar, #penBar, #shapeBar, #dimBar {
+  #eraserBar, #wallBar, #penBar, #shapeBar, #dimBar, #hlBar {
     position: absolute; left: 50%; top: 12px; transform: translateX(-50%); z-index: 2; max-width: calc(100% - 200px); overflow-x: auto; scrollbar-width: none;
     display: none; align-items: center; gap: 8px; padding: 5px 10px; background: #fff;
     border-radius: 16px; box-shadow: var(--float); font-size: 13px; color: var(--ink2); white-space: nowrap;
   }
-  #app.tb-top #eraserBar, #app.tb-top #wallBar, #app.tb-top #penBar, #app.tb-top #shapeBar, #app.tb-top #dimBar { top: 80px; max-width: calc(100% - 24px); }
-  #eraserBar.show, #wallBar.show, #penBar.show, #shapeBar.show, #dimBar.show { display: flex; }
+  #app.tb-top #eraserBar, #app.tb-top #wallBar, #app.tb-top #penBar, #app.tb-top #shapeBar, #app.tb-top #dimBar, #app.tb-top #hlBar { top: 80px; max-width: calc(100% - 24px); }
+  #eraserBar.show, #wallBar.show, #penBar.show, #shapeBar.show, #dimBar.show, #hlBar.show { display: flex; }
   /* 直式 iPad：選項列靠左放，右上角的「− 置中 ＋」不會被蓋住 */
   @media (max-width: 1000px) {
-    #app:not(.tb-top) #eraserBar, #app:not(.tb-top) #wallBar, #app:not(.tb-top) #penBar, #app:not(.tb-top) #shapeBar, #app:not(.tb-top) #dimBar { left: 12px; transform: none; max-width: calc(100% - 196px); }
+    #app:not(.tb-top) #eraserBar, #app:not(.tb-top) #wallBar, #app:not(.tb-top) #penBar, #app:not(.tb-top) #shapeBar, #app:not(.tb-top) #dimBar, #app:not(.tb-top) #hlBar { left: 12px; transform: none; max-width: calc(100% - 196px); }
   }
-  #eraserBar > span, #wallBar > span, #penBar > span, #shapeBar > span, #dimBar > span { flex: 0 0 auto; }
-  #eraserBar > span:first-child, #wallBar > span:first-child, #penBar > span:first-child, #shapeBar > span:first-child, #dimBar > span:first-child { font-weight: 600; color: var(--ink); }
+  #eraserBar > span, #wallBar > span, #penBar > span, #shapeBar > span, #dimBar > span, #hlBar > span { flex: 0 0 auto; }
+  #eraserBar > span:first-child, #wallBar > span:first-child, #penBar > span:first-child, #shapeBar > span:first-child, #dimBar > span:first-child, #hlBar > span:first-child { font-weight: 600; color: var(--ink); }
   #shapeBar button, #wallBar button, .preset, .sf { border-color: transparent; background: var(--ground); flex: 0 0 auto; }
   #shapeBar button { height: 40px; padding: 0 11px; font-size: 14px; display: flex; align-items: center; }
   #shapeBar .sk { width: 42px; justify-content: center; padding: 0; background: transparent; }
@@ -475,7 +477,7 @@
   /* 直接在圖上打字 */
   #inlineText { position: absolute; z-index: 5; display: none; }
   #inlineText.show { display: block; }
-  #itIn { display: block; min-width: 120px; padding: 2px 4px; border: 1.5px dashed var(--sel); border-radius: 6px; background: rgba(255,255,255,0.88);
+  #itIn { display: block; min-width: 120px; min-height: 1.6em; padding: 6px 8px; border: 1.5px dashed var(--sel); border-radius: 6px; background: rgba(255,255,255,0.88);
     font-family: -apple-system, "PingFang TC", "Noto Sans TC", sans-serif; font-weight: 500; resize: none; overflow: hidden; white-space: pre;
     outline: none; -webkit-user-select: text; user-select: text; box-sizing: content-box; }
   #inlineText .itBar { position: absolute; left: 0; top: calc(100% + 8px); display: flex; align-items: center; gap: 6px; padding: 5px; background: #fff;
@@ -660,6 +662,12 @@
   #cropRect i[data-h="w"]::after, #cropRect i[data-h="e"]::after { width: 6px; height: 20px; left: 12px; top: 5px; }
   .cropBtns { display: flex; gap: 8px; }
   .cropBtns .btn { min-width: 96px; }
+  /* 鎖定的東西被選到：選取列只剩「解鎖」 */
+  #selBar.lockedSel > *:not(#selLock) { display: none !important; }
+  #selBar.lockedSel #selLock { color: #b7791f; font-weight: 600; }
+  /* 螢光筆 */
+  #hlBar .hlc { width: 34px; height: 34px; border-radius: 10px; border: 2px solid transparent; background: var(--c); padding: 0; flex: 0 0 auto; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  #hlBar .hlc.on { border-color: var(--ink); }
   /* ===================== 計算機（浮動面板，可以拖） ===================== */
   #calc { position: fixed; z-index: 70; width: 292px; display: none; flex-direction: column; gap: 8px; padding: 0 12px 12px;
     background: #fff; border-radius: 22px; box-shadow: var(--floatHi); -webkit-user-select: none; user-select: none; }
@@ -777,6 +785,9 @@
     <button class="tool on" data-tool="pen" title="畫筆">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/><path d="M14 7l3 3"/></svg>畫筆
     </button>
+    <button class="tool" data-tool="hl" title="螢光筆">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 15l-3 3v2h4l3-3"/><path d="M9 15l7-11 5 4-8 9z"/><path d="M3 21h8" stroke-width="2.4" opacity=".55"/></svg>螢光筆
+    </button>
     <button class="tool" data-tool="wall" title="牆壁筆（立可帶）">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="miter"><path d="M3 9h18v6H3z"/><path d="M3 9l6 6M9 9l6 6M15 9l6 6" stroke-width="1"/></svg>牆壁
     </button>
@@ -865,6 +876,13 @@
       <input type="number" class="sizeNum adv" id="eraserNum" min="4" max="120" step="1" inputmode="numeric">
       <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
+    <div id="hlBar">
+      <span>顏色</span>
+      <button class="hlc" data-c="#ffe94d" style="--c:#ffe94d" aria-label="螢光筆顏色"></button><button class="hlc" data-c="#7ee081" style="--c:#7ee081" aria-label="螢光筆顏色"></button><button class="hlc" data-c="#ff9ec7" style="--c:#ff9ec7" aria-label="螢光筆顏色"></button><button class="hlc" data-c="#7cc8ff" style="--c:#7cc8ff" aria-label="螢光筆顏色"></button><button class="hlc" data-c="#ffb347" style="--c:#ffb347" aria-label="螢光筆顏色"></button>
+      <span class="barSep"></span>
+      <span>粗細</span>
+      <span class="chipPres" id="hlPres"><button data-v="16">細</button><button data-v="26">中</button><button data-v="40">粗</button></span>
+    </div>
     <div id="penBar">
       <div class="drawSeg" role="group" aria-label="畫法">
         <button data-ds="free" title="自由畫（停住不放會自動拉直）"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M3 16c3-6 5-8 7-5s3 4 5 1 4-6 6-4"/></svg>自由</button>
@@ -943,6 +961,7 @@
       <button id="selDup"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>複製</button>
       <button id="selFront"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="3" width="13" height="13" rx="2"/><path d="M5 8H4a1 1 0 0 0-1 1v11a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-1"/></svg>移到最上層</button>
       <select id="selLayer" title="移到圖層"></select>
+      <button id="selLock" title="鎖定後不會被拖動"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg><span id="selLockTxt">鎖定</span></button>
       <button id="selDel" class="del"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13h10l1-13"/><path d="M9 7V4h6v3"/></svg>刪除</button>
     </div>
     <!-- 直接在圖上打字的框 -->
@@ -1676,7 +1695,7 @@ let doc = newDoc();
 //   文字 { id, type:"text", x, y, text, size, color }
 
 let ui = {
-  tool: "pen", color: "#1a1a1a", widthIdx: 1,
+  tool: "pen", color: "#1a1a1a", widthIdx: 1, hlColor: "#ffe94d", hlWidth: 26,
   wallCm: 12,                     // 牆壁筆目前的牆厚（公分）＝目前選的預設
   wallSizes: [10, 20], wallIdx: 0, // 牆厚兩格預設（10＝隔間牆、20＝外牆），可自訂
   toolbarPos: "left",             // 工具列位置：left / right / top / bottom
@@ -1741,7 +1760,7 @@ function prefsObj() {
     eraserSizes: ui.eraserSizes, eraserIdx: ui.eraserIdx, myColors: ui.myColors, colorSlots: ui.colorSlots, colorIdx: ui.colorIdx,
     quickWords: ui.quickWords, dimMode: ui.dimMode, dimUnit: ui.dimUnit, dimCheck: ui.dimCheck, chipSets: ui.chipSets, trayOrder: ui.trayOrder, trayHidden: ui.trayHidden, dimSize: ui.dimSize, shapeWidth: ui.shapeWidth, dimStyle: ui.dimStyle, scale: ui.scale, paper: ui.paper, shapeKind: ui.shapeKind, shapeFill: ui.shapeFill, 
     trayCollapsed: ui.trayCollapsed, newMode: ui.newMode, exportTitle: ui.exportTitle, theme: ui.theme,
-    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer, calcPos: ui.calcPos, layersPos: ui.layersPos,
+    quickLen: ui.quickLen, quickLenLabel: ui.quickLenLabel, autoLayer: ui.autoLayer, calcPos: ui.calcPos, layersPos: ui.layersPos, hlColor: ui.hlColor, hlWidth: ui.hlWidth,
     session: { tabs: tabs.map((t) => t.rec.id), active: activeTab, inLibrary: document.body.classList.contains("inLibrary") } };
 }
 function savePrefs() { try { localStorage.setItem(PREF_KEY, JSON.stringify(prefsObj())); } catch (e) { /* 存不了就算了 */ } }
@@ -1788,6 +1807,8 @@ function applyPrefs(p) {
   if (p.autoLayer === false) ui.autoLayer = false;
   if (p.calcPos && isFinite(p.calcPos.x)) ui.calcPos = p.calcPos;
   if (p.layersPos && isFinite(p.layersPos.x)) ui.layersPos = p.layersPos;
+  if (typeof p.hlColor === "string") ui.hlColor = p.hlColor;
+  if (p.hlWidth > 0) ui.hlWidth = p.hlWidth;
   if (p.quickLenLabel === false) ui.quickLenLabel = false;
   if (p.newMode) ui.newMode = p.newMode;
   if (p.shapeKind) ui.shapeKind = p.shapeKind;
@@ -2023,6 +2044,8 @@ function strokeLook(d, it) {
     return `<path d="${d}" fill="none" stroke="${it.color}" stroke-width="${it.width}" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>`
       + `<path d="${d}" fill="none" stroke="${WALL_FILL}" stroke-width="${Math.max(0.5, it.width - edge * 2)}" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>`;
   }
+  // 螢光筆：半透明、平頭，疊在照片／字上面像真的螢光筆（multiply 讓底下的字還看得清楚）
+  if (it.hl) return `<path d="${d}" fill="none" stroke="${it.color}" stroke-opacity="0.45" stroke-width="${it.width}" stroke-linecap="butt" stroke-linejoin="round" style="mix-blend-mode:multiply"/>`;
   return `<path d="${d}" fill="none" stroke="${it.color}" stroke-width="${it.width}" stroke-linecap="round" stroke-linejoin="round"/>`;
 }
 /* ---------- 圖形：箭頭、折線箭頭、方框、圓角框、圓形 ----------
@@ -2276,8 +2299,9 @@ function freeDimSvg(it, forExport) {
   const hit = forExport || !isEditable(it) ? "" : ` data-fdim="${it.id}"`;
   const val = it.v || "?";
   let pts = "";
-  if (inDim) {
-    // 兩端的小圓點：拖曳可以改量的位置
+  if (inDim && ui.fdimSel === it.id) {
+    // 兩端的小圓點：只有選中的那條才有（好幾條標註共用同一點時，才不會拉錯條）
+    // 在別條的端點上按下去＝從那一點畫新的標註
     // 看起來像「可以抓」的把手：白底藍框＋中間小藍點；第一次畫完會閃一下（fdimPulse）
     const r = 8 / ui.view.z, pulse = ui.fdimPulse === it.id ? ` class="fdimPulse"` : "";
     const knob = (k, x, y) => `<g data-fdimpt="${it.id}:${k}"${pulse}><circle cx="${x}" cy="${y}" r="${r * 2}" fill="transparent"/>`
@@ -2289,6 +2313,13 @@ function freeDimSvg(it, forExport) {
   const p1 = [it.x1 + nx * it.off, it.y1 + ny * it.off], p2 = [it.x2 + nx * it.off, it.y2 + ny * it.off];
   const hitLine = forExport ? "" : `<line x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}" stroke="transparent" stroke-width="18"/>`;
   return dimCore([it.x1, it.y1], [it.x2, it.y2], nx, ny, it.off, 0, val, hit).replace("</g>", hitLine + "</g>") + pts;
+}
+// 沿著一條線滑到指定的 x（或 y）：量尺寸時讓端點剛好水平／垂直
+function slideOnSeg(seg, x, y) {
+  const [[ax, ay], [bx, by]] = seg;
+  if (y !== null && Math.abs(by - ay) > 0.01) { const t = (y - ay) / (by - ay); if (t >= 0 && t <= 1) return [ax + t * (bx - ax), y]; }
+  if (x !== null && Math.abs(bx - ax) > 0.01) { const t = (x - ax) / (bx - ax); if (t >= 0 && t <= 1) return [x, ay + t * (by - ay)]; }
+  return null;
 }
 // 吸附：先找端點（線的頭尾、轉角、方框角），再找線上（含牆的內外兩面）
 function snapPoint(p, excludeId) {
@@ -2458,6 +2489,14 @@ function renderOverlay() {
   const bar = $("selBar");
   if (!it) { overlayG.innerHTML = ""; bar.classList.remove("show"); return; }
   bar.classList.add("show");
+  // 鎖定的東西：只顯示「解鎖」，沒有控制點
+  bar.classList.toggle("lockedSel", !!it.locked);
+  $("selLockTxt").textContent = it.locked ? "解鎖" : "鎖定";
+  if (it.locked) {
+    const b = itemBox(it), z = ui.view.z;
+    overlayG.innerHTML = b ? `<rect x="${b[0]}" y="${b[1]}" width="${b[2] - b[0]}" height="${b[3] - b[1]}" fill="none" stroke="#b7791f" stroke-width="${1.5 / z}" stroke-dasharray="${6 / z} ${4 / z}"/>` : "";
+    return;
+  }
   const isSym = isBox(it), isText = it.type === "text";
   $("selFill").style.display = isShapeBox(it) ? "" : "none";
   if (it.type === "shape") { $("shapeWidthSlider").value = it.width; $("shapeNum").value = it.width; }
@@ -2731,6 +2770,15 @@ function hitTest(clientX, clientY) {
 
 stage.addEventListener("pointerdown", (e) => {
   e.preventDefault();
+  // ---- 防手掌誤觸：手壓在螢幕上用 Apple Pencil 寫字 ----
+  // 筆正在畫：手掌（觸碰）一律不理
+  if (e.pointerType === "touch" && [...pointers.values()].some((p) => p.type === "pen")) return;
+  if (e.pointerType === "pen") {
+    // 手掌先貼著螢幕、筆才落下：把手掌的觸碰清掉，手掌剛剛造成的動作（亂畫的線、移動）也取消
+    for (const [id, pt] of pointers) if (pt.type === "touch") pointers.delete(id);
+    pinch = null;
+    if (action && action.ptype === "touch") cancelAction();
+  }
   stage.setPointerCapture(e.pointerId);
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
   if (e.pointerType === "pen") ui.penSeen = true;
@@ -2763,7 +2811,8 @@ stage.addEventListener("pointerdown", (e) => {
       return;
     }
     if (fEl) {
-      action = { type: "fdimTap", id: Number(fEl.dataset.fdim), sx: e.clientX, sy: e.clientY, dragging: false };
+      const onNum = els.some((x) => x.tagName === "text" && fEl.contains(x));
+      action = { type: "fdimTap", id: Number(fEl.dataset.fdim), sx: e.clientX, sy: e.clientY, dragging: false, onNum };
       return;
     }
   }
@@ -2780,7 +2829,7 @@ stage.addEventListener("pointerdown", (e) => {
     action = { type: "dimTap", key: dimEl ? dimEl.dataset.dim : null, sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y, panning: false, dragging: false };
     return;
   }
-  if ((tool === "pen" || tool === "wall" || tool === "eraser" || tool === "text" || tool === "shape") && fingerOnly) {
+  if ((tool === "pen" || tool === "hl" || tool === "wall" || tool === "eraser" || tool === "text" || tool === "shape") && fingerOnly) {
     const hit = hitTest(e.clientX, e.clientY);
     const sel = doc.items.find((i) => i.id === ui.selectedId);
     if (hit && hit.handle && sel) {
@@ -2788,6 +2837,12 @@ stage.addEventListener("pointerdown", (e) => {
       const snapshot = JSON.stringify(doc);
       pushUndo();
       action = { type: hit.handle, dir: hit.dir, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
+      return;
+    }
+    // 點到鎖定的東西：拖曳＝移動畫面（不會拖走它），點一下＝選到它（可以解鎖）
+    if (hit && hit.id && doc.items.find((i) => i.id === hit.id && i.locked)) {
+      if (ui.selectedId !== hit.id) { ui.selectedId = null; renderOverlay(); }
+      action = { type: "pan", sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y, tapLocked: hit.id };
       return;
     }
     if (hit && hit.id) {
@@ -2804,17 +2859,18 @@ stage.addEventListener("pointerdown", (e) => {
     return;
   }
 
-  if (tool === "pen" || tool === "wall") {
+  if (tool === "pen" || tool === "wall" || tool === "hl") {
     if (!canDrawOnActive()) return;
     if (ui.selectedId) { ui.selectedId = null; renderOverlay(); }
-    const wall = tool === "wall";
-    const width = wall ? ui.wallCm * PX_PER_CM : ui.penSizes[ui.penIdx];
-    action = { type: "draw", pts: [[wx, wy]], shape: null, wall, width, forced: (() => { const m = wall ? ui.drawShape : ui.penShape; return m !== "free" ? m : null; })(), touch: e.pointerType === "touch" };
+    const wall = tool === "wall", hl = tool === "hl";
+    const width = wall ? ui.wallCm * PX_PER_CM : hl ? ui.hlWidth / ui.view.z : ui.penSizes[ui.penIdx];
+    action = { type: "draw", pts: [[wx, wy]], shape: null, wall, hl, width, forced: (() => { if (hl) return null; const m = wall ? ui.drawShape : ui.penShape; return m !== "free" ? m : null; })(), touch: e.pointerType === "touch" };
     if (!action.forced) armHold(action, e.clientX, e.clientY);   // 直線／矩形模式不用停住
     // 預覽：用 #livePath 當外框，牆壁筆多一條 #liveFill 當填色
     liveG.innerHTML = wall
       ? `<path id="livePath" fill="none" stroke="${ui.color}" stroke-width="${width}" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>`
         + `<path id="liveFill" fill="none" stroke="${WALL_FILL}" stroke-width="${width - 3.2}" stroke-linecap="square" stroke-linejoin="miter" stroke-miterlimit="3"/>`
+      : hl ? `<path id="livePath" fill="none" stroke="${ui.hlColor}" stroke-opacity="0.45" stroke-width="${width}" stroke-linecap="butt" stroke-linejoin="round"/>`
       : `<path id="livePath" fill="none" stroke="${ui.color}" stroke-width="${width}" stroke-linecap="round" stroke-linejoin="round"/>`;
     return;
   }
@@ -2854,6 +2910,12 @@ stage.addEventListener("pointerdown", (e) => {
     action = { type: hit.handle, dir: hit.dir, item: sel, start: JSON.parse(JSON.stringify(sel)), wx, wy, snapshot };
     return;
   }
+  // 點到鎖定的東西：拖曳＝移動畫面（不會拖走它），點一下＝選到它（可以解鎖）
+  if (hit && hit.id && doc.items.find((i) => i.id === hit.id && i.locked)) {
+    if (ui.selectedId !== hit.id) { ui.selectedId = null; renderOverlay(); }
+    action = { type: "pan", sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y, tapLocked: hit.id };
+    return;
+  }
   if (hit && hit.id) {
     ui.selectedId = hit.id;
     const it = doc.items.find((i) => i.id === hit.id);
@@ -2869,11 +2931,23 @@ stage.addEventListener("pointerdown", (e) => {
   action = { type: "pan", sx: e.clientX, sy: e.clientY, vx: ui.view.x, vy: ui.view.y, tapW: [wx, wy] };
 });
 
+// 記住這個動作是哪一支筆／哪一根手指開始的：別的觸碰（例如手掌）不會去動到它
+stage.addEventListener("pointerdown", (e) => { if (action && action.pid == null) { action.pid = e.pointerId; action.ptype = e.pointerType; } });
+// 取消目前動作（不留下任何東西）
+function cancelAction() {
+  const a = action; action = null;
+  if (!a) return;
+  clearTimeout(a.holdTimer);
+  liveG.innerHTML = "";
+  if (a.snapshot) { doc = JSON.parse(a.snapshot); undoStack.pop(); }
+  render();
+}
 stage.addEventListener("pointermove", (e) => {
   if (!pointers.has(e.pointerId)) return;
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, type: e.pointerType });
   if (pinch) { updatePinch(); return; }
   if (!action) return;
+  if (action.pid != null && e.pointerId !== action.pid) return;   // 不是開始這個動作的那支筆／手指
   const [wx, wy] = toWorld(e.clientX, e.clientY);
 
   switch (action.type) {
@@ -2953,7 +3027,14 @@ stage.addEventListener("pointermove", (e) => {
       const it = doc.items.find((x) => x.id === action.id);
       if (!it) break;
       const s = snapPoint([wx, wy], it.id);
-      if (action.k === 1) { it.x1 = s.p[0]; it.y1 = s.p[1]; } else { it.x2 = s.p[0]; it.y2 = s.p[1]; }
+      let p = s.p;
+      // 沒吸到端點時：跟另一端接近水平／垂直就拉正（避免量出斜的尺寸）
+      if (s.kind !== "end") {
+        const o = action.k === 1 ? [it.x2, it.y2] : [it.x1, it.y1];
+        if (Math.abs(p[1] - o[1]) < Math.abs(p[0] - o[0]) * 0.14) p = (s.kind === "line" && slideOnSeg(s.seg, null, o[1])) || [p[0], o[1]];
+        else if (Math.abs(p[0] - o[0]) < Math.abs(p[1] - o[1]) * 0.14) p = (s.kind === "line" && slideOnSeg(s.seg, o[0], null)) || [o[0], p[1]];
+      }
+      if (action.k === 1) { it.x1 = p[0]; it.y1 = p[1]; } else { it.x2 = p[0]; it.y2 = p[1]; }
       render();
       liveG.innerHTML = snapMark(s);
       break;
@@ -3026,6 +3107,7 @@ function endPointer(e) {
     if ([...pointers.values()].filter((p) => p.type === "touch").length < 2) { pinch = null; save(); }
     return;
   }
+  if (action && action.pid != null && e.pointerId !== action.pid) return;   // 手掌離開不會結束筆正在畫的線
   if (!action) return;
   const a = action;
   action = null;
@@ -3048,7 +3130,8 @@ function endPointer(e) {
       if (a.shape.kind === "line" || a.shape.kind === "poly") pts = snapToVertices(pts, a.wall ? a.width * 0.8 : 0);
     }
     pushUndo();
-    const newIt = { id: nextId++, type: "stroke", layer: layerFor(a.wall ? "wall" : "pen"), pts: pts.map(([x, y]) => [round1(x), round1(y)]), color: ui.color, width: a.width, wall: a.wall, straight };
+    const newIt = { id: nextId++, type: "stroke", layer: layerFor(a.wall ? "wall" : a.hl ? "note" : "pen"), pts: pts.map(([x, y]) => [round1(x), round1(y)]), color: a.hl ? ui.hlColor : ui.color, width: a.width, wall: a.wall, straight };
+    if (a.hl) newIt.hl = true;
     doc.items.push(newIt);
     afterChange();
     // 照比例模式：畫完一條直線，旁邊跳出長度輸入框
@@ -3059,6 +3142,7 @@ function endPointer(e) {
     liveG.innerHTML = "";
     const len = Math.hypot(a.p2[0] - a.p1[0], a.p2[1] - a.p1[1]) * ui.view.z;
     if (len < 12) {
+      if (ui.fdimSel) { ui.fdimSel = null; render(); }   // 點空白＝取消選取標註
       // 沒拖：當成點一下，看是不是點到手繪線（提示）
       const hit = hitTest(a.sx, a.sy);
       const it = hit && hit.id && doc.items.find((x) => x.id === hit.id);
@@ -3068,6 +3152,7 @@ function endPointer(e) {
     pushUndo();
     const it = { id: nextId++, type: "dim", layer: layerFor("note"), x1: a.p1[0], y1: a.p1[1], x2: a.p2[0], y2: a.p2[1], side: 1, off: 30, v: "" };
     doc.items.push(it);
+    ui.fdimSel = it.id;   // 剛畫好的這條：直接可以拉兩端
     afterChange();
     fdimHintPending = it.id;   // 打完數字後提示「兩端可以拉」
     openFreeDim(it, true);
@@ -3076,8 +3161,10 @@ function endPointer(e) {
     afterChange();
   } else if (a.type === "fdimTap") {
     const it = doc.items.find((x) => x.id === a.id);
+    if (it) { ui.fdimSel = it.id; render(); }
     if (a.dragging) afterChange();
-    else if (it) openFreeDim(it, false);
+    else if (it && (a.onNum || ui.tool !== "dim")) openFreeDim(it, false);
+    else if (it) hint("fdimSel", "選好這條了：拖兩端的圓點調整；點數字可以改數字");
   } else if (a.type === "dimTap") {
     if (a.dragging) { afterChange(); }
     else if (a.panning) { render(); save(); }
@@ -3119,6 +3206,9 @@ function endPointer(e) {
     afterChange();
   } else if (["resize", "rotate", "p1", "p2"].includes(a.type)) {
     afterChange();
+  } else if (a.type === "pan" && a.tapLocked && Math.hypot(ui.view.x - a.vx, ui.view.y - a.vy) < 6) {
+    ui.selectedId = a.tapLocked; renderOverlay();   // 點一下鎖定的東西：選到它，可以按「解鎖」
+    hint("lockedTap", "這個已經鎖定了，按下面的「解鎖」才能移動");
   } else if (a.type === "pan") {
     // 選取工具點在淡淡的草圖線上（點不到）：提醒那是草圖底稿
     if (a.tapW && Math.hypot(ui.view.x - a.vx, ui.view.y - a.vy) < 6 && sketchItemNear(a.tapW[0], a.tapW[1])) sketchNudge();
@@ -3134,6 +3224,7 @@ stage.addEventListener("pointercancel", endPointer);
 const tapG = { active: null, last: null };
 stage.addEventListener("pointerdown", (e) => {
   if (e.pointerType !== "touch") return;
+  if ([...pointers.values()].some((p) => p.type === "pen")) return;   // 筆在畫時手掌碰到，不算「兩指點一下復原」
   if (!tapG.active) tapG.active = { t0: performance.now(), starts: new Map(), down: 0, max: 0, moved: false };
   const g = tapG.active;
   g.starts.set(e.pointerId, [e.clientX, e.clientY]);
@@ -3776,7 +3867,7 @@ function maybeFdimHint() {
   if (id == null || !doc.items.some((i) => i.id === id)) return;
   try { if (localStorage.getItem(FDIM_HINT_KEY)) return; localStorage.setItem(FDIM_HINT_KEY, "1"); } catch (e) { return; }
   ui.fdimPulse = id; render();
-  toast("拖兩端的圓點可以拉長縮短，拖數字可以移位置", true);
+  toast("拖兩端的圓點可以拉長縮短；要改別條，先點那條線", true);
   setTimeout(() => { if (ui.fdimPulse === id) { ui.fdimPulse = null; render(); } }, 2300);
 }
 function closeDim(ok) {
@@ -3989,6 +4080,23 @@ $("selSaveSym").addEventListener("click", () => {
   }, "幫這個符號取名字", "sym");
 });
 
+// 鎖定／解鎖
+$("selLock").addEventListener("click", () => {
+  const it = selected(); if (!it) return;
+  pushUndo();
+  if (it.locked) { delete it.locked; toast("已解鎖，可以移動了"); }
+  else { it.locked = true; hint("locked", "鎖定了：拖它會移動畫面，不會拖動它"); }
+  afterChange(); renderOverlay();
+});
+/* ---------- 螢光筆 ----------
+   半透明的粗筆：標重點用，畫完停住一樣會拉直。粗細是「螢幕上看起來」的粗細。 */
+function refreshHlBar() {
+  document.querySelectorAll("#hlBar .hlc").forEach((b) => b.classList.toggle("on", b.dataset.c === ui.hlColor));
+  document.querySelectorAll("#hlPres button").forEach((b) => b.classList.toggle("on", Number(b.dataset.v) === ui.hlWidth));
+}
+document.querySelectorAll("#hlBar .hlc").forEach((b) => b.addEventListener("click", () => { ui.hlColor = b.dataset.c; refreshHlBar(); savePrefs(); }));
+document.querySelectorAll("#hlPres button").forEach((b) => b.addEventListener("click", () => { ui.hlWidth = Number(b.dataset.v); refreshHlBar(); savePrefs(); }));
+refreshHlBar();
 /* ---------- 照片：裁切 ----------
    不會真的剪掉原圖：只記住要顯示原圖的哪一塊（crop），所以之後還能重新裁、還原整張。 */
 let cropState = null;
@@ -4157,6 +4265,7 @@ function setTool(tool) {
   $("eraserBar").classList.toggle("show", tool === "eraser");
   $("wallBar").classList.toggle("show", tool === "wall");
   $("penBar").classList.toggle("show", tool === "pen");
+  $("hlBar").classList.toggle("show", tool === "hl");
   $("shapeBar").classList.toggle("show", tool === "shape");
   $("dimBar").classList.toggle("show", tool === "dim");
   if (tool === "dim") refreshDimBar();
@@ -4404,7 +4513,7 @@ $("layerAdd").addEventListener("click", () => {
    - 草圖（現場）：只留畫筆、橡皮擦、選取、文字和顏色，畫在專用的「草圖」圖層。不照比例、不問尺寸，數字用筆寫在旁邊。
    - 精畫（辦公室）：草圖圖層自動鎖住、變淡，當描圖的底稿；工具全部回來，在上面描牆、放符號、標尺寸。
    doc.mode 存在圖裡；舊的圖沒有這個欄位＝精畫。 */
-const SKETCH_TOOLS = ["select", "pen", "text", "eraser"];
+const SKETCH_TOOLS = ["select", "pen", "hl", "text", "eraser"];
 const SKETCH_FADE = 0.3;   // 精畫時草圖的濃度
 function sketchLayer(create) {
   let l = doc.layers.find((x) => x.sketch);
@@ -5158,6 +5267,7 @@ $("selFront").addEventListener("click", () => {
   afterChange();
 });
 $("selDel").addEventListener("click", () => {
+  { const it0 = selected(); if (it0 && it0.locked) return; }
   const it = selected(); if (!it) return;
   pushUndo();
   doc.items = doc.items.filter((i) => i !== it);
@@ -5231,7 +5341,7 @@ function openInlineText(target) {
 function fitInline() {
   const ta = $("itIn");
   ta.style.width = "40px"; ta.style.height = "auto";
-  ta.style.width = Math.min(window.innerWidth * 0.7, Math.max(120, ta.scrollWidth + 8)) + "px";
+  ta.style.width = Math.min(window.innerWidth * 0.7, Math.max(260, ta.scrollWidth + 40)) + "px";   // 留空間給手寫
   ta.style.height = ta.scrollHeight + "px";
 }
 function commitInlineText() {
@@ -5257,9 +5367,12 @@ function commitInlineText() {
 $("itIn").addEventListener("input", fitInline);
 $("itIn").addEventListener("keydown", (e) => { if (e.key === "Escape") commitInlineText(); });
 // 收起鍵盤（失去焦點）也算完成；點到常用字或「完成」不算
+// 手寫辨識有時會短暫失去焦點：等久一點，剛剛還在寫字就不算完成
+let itTyping = 0;
+$("itIn").addEventListener("input", () => { itTyping = Date.now(); });
 $("itIn").addEventListener("blur", () => setTimeout(() => {
-  if (inlineTarget && !$("inlineText").contains(document.activeElement)) commitInlineText();
-}, 150));
+  if (inlineTarget && !$("inlineText").contains(document.activeElement) && Date.now() - itTyping > 1500) commitInlineText();
+}, 600));
 $("itDone").addEventListener("pointerdown", (e) => e.preventDefault());
 $("itDone").addEventListener("click", commitInlineText);
 $("itMore").addEventListener("pointerdown", (e) => e.preventDefault());
@@ -5272,6 +5385,11 @@ $("itMore").addEventListener("click", () => {
 // 點畫布其他地方＝完成（這一下不會再開一個新的打字框）
 $("stage").addEventListener("pointerdown", (e) => {
   if (!inlineTarget) return;
+  // 用 Apple Pencil 手寫時，字常常寫出框外：框的附近（左右 120、上下 80）都算在寫字，不收起來
+  if (e.pointerType === "pen") {
+    const r = $("itIn").getBoundingClientRect();
+    if (e.clientX > r.left - 120 && e.clientX < r.right + 120 && e.clientY > r.top - 80 && e.clientY < r.bottom + 80) { e.stopImmediatePropagation(); return; }
+  }
   commitInlineText();
   e.stopImmediatePropagation(); e.preventDefault();
 }, true);
@@ -6287,8 +6405,16 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.11.1";
+const APP_VERSION = "2026.11.11.2";
 const CHANGELOG = [
+  ["2026.11.11.2", [
+    "新增「螢光筆」：半透明標重點，5 種顏色、3 種粗細，畫完停住一樣會拉直",
+    "可以「鎖定」照片（或任何東西）：選取後按「鎖定」，之後拖它只會移動畫面，不會拖走",
+    "自由標註拉端點時，接近水平／垂直會自動拉正",
+    "好幾條標註共用同一點時不會再拉錯：只有選中的那條有圓點，在別條的端點上按下去＝從那裡畫新的標註",
+    "用 Apple Pencil 手寫打字比較穩：字寫出框外也不會被收掉，打字框也變大了",
+    "防手掌誤觸：手壓在螢幕上用 Apple Pencil 也能正常畫線、寫字",
+  ]],
   ["2026.11.11.1", [
     "匯入的照片可以「裁切」：選取照片後按下面的「裁切」，拖四角四邊調範圍，之後也能重新裁或還原整張",
     "照片可以「去白底」：白色背景一鍵變透明，不滿意按「還原白底」",
