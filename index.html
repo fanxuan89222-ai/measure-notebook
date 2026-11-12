@@ -149,19 +149,41 @@
     background: var(--panel);
   }
 
-  /* 上方列：業主資料 + 存檔狀態 + 復原 + 圖層／設定／更多 + 匯出 */
+  /* 上方的按鈕（存檔狀態、草圖／精畫、圖層、計算機、設定、更多、匯出）：
+     放進最上面的深藍分頁列右邊，省下一整列給畫布 */
   #topbar {
-    grid-area: top; display: flex; align-items: center; gap: 6px;
-    padding: 8px 12px; background: var(--panel); border-bottom: 1px solid var(--line); z-index: 4;
+    position: fixed; top: env(safe-area-inset-top); right: calc(10px + env(safe-area-inset-right)); height: 44px; z-index: 31;
+    display: flex; align-items: center; gap: 4px; padding: 0 0 0 10px; background: var(--navy);
   }
-  #topbar input {
+  #tabbar { padding-right: var(--tbRightW, 10px); }
+  body.inLibrary #tabbar { padding-right: 10px; }
+  #topbar .btn.ghost { height: 34px; color: #dbe2f0; background: transparent; }
+  #topbar .btn.ghost:hover, #topbar .btn.ghost:active { background: rgba(255,255,255,0.1); }
+  #topbar .btn.ghost.on, #topbar #btnLayers.on { background: rgba(255,255,255,0.16); color: #fff; }
+  #topbar .btn.glaze { height: 34px; }
+  #topbar .layerBtn em { background: rgba(255,255,255,0.14) !important; color: #fff !important; }
+  #topbar .tbSep { background: rgba(255,255,255,0.18); }
+  #topbar .modeSeg { background: rgba(255,255,255,0.1); }
+  #topbar .modeSeg { align-items: center; padding: 2px; border-radius: 10px; }
+  #topbar .modeSeg button { color: #c6cfe2; height: 30px; padding: 0 12px; display: flex; align-items: center; font-size: 14px; border-radius: 8px; }
+  #topbar .modeSeg button.on { background: #fff; color: var(--ink); }
+  #topbar.sketch .modeSeg button.on { color: var(--glaze); }
+  body.inLibrary #topbar { display: none; }
+  #topbar #saveState { color: #9fb0cf; }
+  /* 分頁上「目前這張」：有一支小筆，點了可以填業主資料 */
+  #tabbar .tab.on .ed { display: inline-flex; opacity: 0.45; }
+  #tabbar .tab .ed { display: none; width: 14px; height: 14px; }
+  #docInfo { width: 320px; padding: 14px; gap: 10px; }
+  #docInfo b { font-size: 15px; }
+  #docInfo small { font-size: 12.5px; color: var(--ink2); }
+  #docInfo input {
     font: inherit; font-size: 15px; height: 40px; padding: 0 12px; border: 1px solid transparent; border-radius: 10px;
     background: var(--ground); color: var(--ink); min-width: 0; -webkit-user-select: text; user-select: text;
   }
-  #topbar input::placeholder { color: #5f6880; }
-  #topbar input:focus { outline: none; background: #fff; border-color: var(--sel); box-shadow: 0 0 0 3px var(--selSoft); }
-  #topbar input#metaOwner { width: 128px; font-weight: 600; }
-  #topbar input#metaAddr { flex: 1; }
+  #docInfo input::placeholder { color: #5f6880; }
+  #docInfo input:focus { outline: none; background: #fff; border-color: var(--sel); box-shadow: 0 0 0 3px var(--selSoft); }
+  #docInfo input#metaOwner { font-weight: 600; }
+  #docInfo input { width: 100%; box-sizing: border-box; }
   #saveState { font-size: 13px; color: var(--ink2); display: flex; align-items: center; gap: 3px; white-space: nowrap; min-width: 56px; opacity: 0; transition: opacity .3s; }
   #saveState.show { opacity: 1; }
   #saveState svg { width: 14px; height: 14px; }
@@ -227,6 +249,13 @@
   #app.tb-top #toolbar { align-self: start; }
   #app.tb-bottom #toolbar { align-self: end; }
   .sep { height: 1px; width: 36px; background: var(--line); margin: 4px 0; flex: 0 0 auto; }
+  /* 工具列最上面：復原／重做（兩顆並排） */
+  .undoRow { display: flex; gap: 2px; flex: 0 0 auto; }
+  .undoBtn { width: 26px; height: 34px; padding: 0; border: none; border-radius: 9px; background: transparent; color: var(--ink); display: flex; align-items: center; justify-content: center; }
+  .undoBtn svg { width: 20px; height: 20px; }
+  .undoBtn:active { background: var(--ground); }
+  .undoBtn:disabled { color: #b9c0cf; }
+  #app.tb-top .undoBtn, #app.tb-bottom .undoBtn { width: 38px; }
   #app.tb-top .sep, #app.tb-bottom .sep { width: 1px; height: 36px; margin: 0 4px; }
 
   .tool {
@@ -720,11 +749,9 @@
 
   /* 直立的 iPad（比較窄）：按鈕只留圖示，留空間給地址欄 */
   @media (max-width: 960px) {
-    #topbar { gap: 4px; padding: 8px 8px; }
+    #topbar { gap: 2px; }
     #topbar .lbl { display: none; }
-    #topbar input#metaOwner { width: 96px; }
-    #topbar input#metaAddr { min-width: 100px; }
-    #topbar .btn:not(.icon) { padding: 0 10px; }
+    #topbar .btn:not(.icon) { padding: 0 9px; }
     #topbar .layerBtn { max-width: 120px; }
     #saveState span { display: none; }
     #saveState { min-width: 18px; }
@@ -736,6 +763,20 @@
 <body>
 <!-- 分頁列 -->
 <nav id="tabbar"></nav>
+<!-- 分頁列右邊的按鈕（放在 #app 外面，才能蓋在分頁列上） -->
+<header id="topbar">
+    <!-- 草圖／精畫切換：同一張圖，草圖在現場隨手畫，精畫回辦公室描在草圖上 -->
+    <div class="seg modeSeg" id="modeSeg">
+      <button data-m="sketch">草圖</button><button data-m="fine">精畫</button>
+    </div>
+    <span id="saveState"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>已儲存</span></span>
+    <span class="tbSep"></span>
+    <button class="btn ghost layerBtn" id="btnLayers" title="圖層"></button>
+    <button class="btn ghost" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span class="lbl">計算機</span></button>
+    <button class="btn ghost" id="btnSettings" title="設定"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">設定</span></button>
+    <button class="btn ghost" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span class="lbl">更多</span></button>
+    <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
+  </header>
 
 <!-- 文件庫（像 GoodNotes 的首頁） -->
 <section id="library">
@@ -766,25 +807,13 @@
 
 <div id="app">
   <!-- ========== 上方工具列 ========== -->
-  <header id="topbar">
-    <!-- 草圖／精畫切換：同一張圖，草圖在現場隨手畫，精畫回辦公室描在草圖上 -->
-    <div class="seg modeSeg" id="modeSeg">
-      <button data-m="sketch">草圖</button><button data-m="fine">精畫</button>
-    </div>
+  <!-- 這張圖的資料：點上面「目前這張」的分頁標題打開 -->
+  <div class="popMenu" id="docInfo">
+    <b>這張圖的資料</b>
     <input id="metaOwner" placeholder="業主姓名" autocomplete="off">
     <input id="metaAddr" placeholder="地址／案場名稱" autocomplete="off">
-    <span id="saveState"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg><span>已儲存</span></span>
-    <div class="tbGroup">
-      <button class="btn ghost icon" id="btnUndo" title="復原（兩指點一下）"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
-      <button class="btn ghost icon" id="btnRedo" title="重做（三指點一下）"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
-    </div>
-    <span class="tbSep"></span>
-    <button class="btn ghost layerBtn" id="btnLayers" title="圖層"></button>
-    <button class="btn ghost" id="btnCalc" title="計算機"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2.5" width="16" height="19" rx="2.8"/><rect x="7" y="5.5" width="10" height="4" rx="1" fill="currentColor" stroke="none"/><path d="M7.6 14h3M9.1 12.5v3M13.4 14h3M7.9 17.2l2.4 2.4M10.3 17.2l-2.4 2.4M13.4 17.6h3M13.4 19.2h3" stroke-width="1.6"/></svg><span class="lbl">計算機</span></button>
-    <button class="btn ghost" id="btnSettings" title="設定"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg><span class="lbl">設定</span></button>
-    <button class="btn ghost" id="btnMore" title="更多"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="5" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="19" cy="12" r="1.3" fill="currentColor"/></svg><span class="lbl">更多</span></button>
-    <button class="btn glaze" id="btnExport"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3"/><path d="M7 8l5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg><span>匯出圖片</span></button>
-  </header>
+    <small>填好後，分頁和文件庫都會顯示業主名字</small>
+  </div>
   <!-- 「更多」選單：不常用、比較危險的動作收在這裡 -->
   <div class="popMenu" id="moreMenu">
     <button id="btnHelpMenu"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.5V14"/><circle cx="12" cy="17.2" r=".6" fill="currentColor"/></svg>使用說明（示範短片）</button>
@@ -797,6 +826,12 @@
 
   <!-- ========== 左側工具 ========== -->
   <nav id="toolbar">
+    <!-- 復原／重做（也可以兩指點一下＝復原、三指＝重做） -->
+    <div class="undoRow">
+      <button class="undoBtn" id="btnUndo" title="復原（兩指點一下）"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/></svg></button>
+      <button class="undoBtn" id="btnRedo" title="重做（三指點一下）"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h3"/></svg></button>
+    </div>
+    <div class="sep"></div>
     <button class="tool" data-tool="select" title="選取／移動">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><path d="M5 3l14 8-6 1.6L10 19z"/></svg>選取
     </button>
@@ -4663,7 +4698,7 @@ function setMode(mode) {
 }
 function applyModeUI() {
   const sk = doc.mode === "sketch";
-  $("app").classList.toggle("sketch", sk);
+  $("app").classList.toggle("sketch", sk); $("topbar").classList.toggle("sketch", sk);
   document.querySelectorAll("#modeSeg button").forEach((b) => b.classList.toggle("on", b.dataset.m === (sk ? "sketch" : "fine")));
   document.querySelectorAll(".tool[data-tool]").forEach((b) => { b.style.display = sk && !SKETCH_TOOLS.includes(b.dataset.tool) ? "none" : ""; });
   $("btnImage").style.display = sk ? "none" : "";
@@ -5924,8 +5959,13 @@ function renderTabs() {
     const b = document.createElement("button");
     b.className = "tab" + (!inLib && i === activeTab ? " on" : "");
     const d = i === activeTab ? doc : t.doc;
-    b.innerHTML = `<span>${escapeXml(docLabel(t.rec, d))}</span><i title="關閉">✕</i>`;
-    b.addEventListener("click", (e) => { if (e.target.tagName === "I") closeTab(i); else switchTab(i); });
+    b.innerHTML = `<span>${escapeXml(docLabel(t.rec, d))}</span><svg class="ed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-4L16 5l3 3L8 19z"/></svg><i title="關閉">✕</i>`;
+    b.addEventListener("click", (e) => {
+      if (e.target.tagName === "I") { closeTab(i); return; }
+      // 已經在這張：點標題＝填業主姓名、地址
+      if (i === activeTab && !document.body.classList.contains("inLibrary")) { openDocInfo(b); return; }
+      switchTab(i);
+    });
     bar.appendChild(b);
   });
   const add = document.createElement("button");
@@ -5933,6 +5973,24 @@ function renderTabs() {
   add.addEventListener("click", () => createDoc(curRec ? curRec.folder : libFolder));
   bar.appendChild(add);
 }
+// 業主資料小視窗：放在分頁正下方
+function openDocInfo(tabEl) {
+  const m = $("docInfo"), r = tabEl.getBoundingClientRect();
+  if (m.classList.contains("show")) { m.classList.remove("show"); return; }
+  m.classList.add("show");
+  m.style.top = r.bottom + 6 + "px";
+  m.style.left = Math.max(8, Math.min(innerWidth - m.offsetWidth - 8, r.left)) + "px";
+  m.style.right = "auto";
+}
+document.addEventListener("pointerdown", (e) => {
+  const m = $("docInfo");
+  if (!m.classList.contains("show") || e.target.closest("#docInfo, #tabbar .tab.on")) return;
+  m.classList.remove("show");
+  if (e.target.closest("#stage")) { e.stopPropagation(); e.preventDefault(); swallowClick = true; }
+}, true);
+["metaOwner", "metaAddr"].forEach((id) => $(id).addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); id === "metaOwner" ? $("metaAddr").focus() : $("docInfo").classList.remove("show"); } }));
+// 分頁列右邊留位置給按鈕（按鈕多寬就留多寬）
+if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty("--tbRightW", $("topbar").offsetWidth + 20 + "px")).observe($("topbar"));
 function showEditor() {
   document.body.classList.remove("inLibrary");
 }
@@ -5961,7 +6019,7 @@ async function createDoc(folder) {
   const rec = { id: newId("D"), name: "", folder: folder || null, created: now, updated: now, data: d, view: null, thumb: null, label: "未命名平面圖" };
   await dbPut("docs", rec);
   await openDoc(rec.id);
-  hint("newDoc", "業主姓名可以在上方填");
+  hint("newDoc", "點上面的分頁標題，可以填業主姓名、地址");
 }
 const fmtDate = (t) => { const d = new Date(t); return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 async function renderLibrary() {
@@ -6529,8 +6587,14 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.12.1";
+const APP_VERSION = "2026.11.12.2";
 const CHANGELOG = [
+  ["2026.11.12.2", [
+    "版面整理：上方那一整列拿掉了，畫圖空間變大",
+    "業主姓名、地址：點最上面「目前這張」的分頁標題（有一支小筆）就能填",
+    "草圖／精畫、圖層、計算機、設定、更多、匯出，搬到最上面分頁列的右邊",
+    "復原／重做移到左邊工具列最上面（兩指點一下＝復原，一樣可以用）",
+  ]],
   ["2026.11.12.1", [
     "iPad 橫放時，下方符號列變精簡（圖示小一點、名字還在），畫圖空間變大",
   ]],
