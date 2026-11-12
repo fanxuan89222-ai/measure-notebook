@@ -646,18 +646,18 @@
 
   /* ===================== 精畫模式的「草圖底稿」小膠囊 =====================
      草圖在精畫模式會變淡、鎖住；這顆膠囊告訴大家「那些淡淡的線是什麼」，點開可以回草圖改、隱藏、或直接轉成正式線 */
-  #sketchChip { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 3; display: none; align-items: center; gap: 7px;
+  #sketchChip { position: absolute; left: 12px; top: 70px; z-index: 4;   /* 放在「草圖／精畫」正下方 */ display: none; align-items: center; gap: 7px;
     height: 38px; padding: 0 14px 0 12px; border: none; border-radius: 19px; background: #fff; color: var(--ink); font-size: 14px; font-weight: 600;
     box-shadow: var(--float); white-space: nowrap; }
   #sketchChip.show { display: flex; }
-  /* 選取東西時，下面出現選取工具列（同一個位置），草圖底稿膠囊先讓開，取消選取就回來 */
-  body:has(#selBar.show) #sketchChip, body:has(#selBar.show) #sketchPop { display: none; }
+  /* 直立畫面：選項列排在第二排，膠囊就改放在「草圖／精畫」右邊 */
+  @media (max-width: 1000px) { #sketchChip { left: 154px; top: 15px; } #sketchPop { left: 12px; top: 64px; } }
   #sketchChip .sw { width: 18px; height: 18px; border-radius: 5px; background: repeating-linear-gradient(135deg, rgba(194,86,47,.45) 0 2px, transparent 2px 5px); border: 1.5px solid rgba(194,86,47,.55); }
   #sketchChip small { font-weight: 400; color: var(--ink2); font-size: 12.5px; }
   #sketchChip svg { width: 14px; height: 14px; color: var(--ink2); }
   #sketchChip.nudge { animation: chipNudge .9s ease-in-out 2; }
-  @keyframes chipNudge { 0%, 100% { transform: translateX(-50%); box-shadow: var(--float); } 30% { transform: translateX(-50%) translateY(-4px); box-shadow: 0 0 0 4px rgba(194,86,47,.25), var(--float); } }
-  #sketchPop { position: absolute; left: 50%; bottom: 62px; transform: translateX(-50%); z-index: 5; width: min(380px, calc(100% - 24px)); display: none;
+  @keyframes chipNudge { 0%, 100% { transform: none; box-shadow: var(--float); } 30% { transform: translateY(3px); box-shadow: 0 0 0 4px rgba(194,86,47,.25), var(--float); } }
+  #sketchPop { position: absolute; left: 12px; top: 116px; z-index: 6;   /* 從膠囊往下打開 */ width: min(380px, calc(100% - 24px)); display: none;
     background: #fff; border-radius: 20px; padding: 16px 16px 14px; box-shadow: var(--floatHi); }
   #sketchPop.show { display: block; animation: popIn .2s cubic-bezier(.2,.9,.25,1); }
   #sketchPop h3 { margin: 0 34px 6px 0; font-size: 16px; }
@@ -925,7 +925,7 @@
     </svg>
     <div id="scaleBadge">照比例・1 小格＝10cm</div>
     <!-- 精畫模式：草圖底稿的說明膠囊 -->
-    <button id="sketchChip" type="button"><span class="sw"></span>草圖底稿<small id="sketchChipState">淡淡顯示</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 15l6-6 6 6"/></svg></button>
+    <button id="sketchChip" type="button"><span class="sw"></span>草圖底稿<small id="sketchChipState">淡淡顯示</small><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"/></svg></button>
     <div id="sketchPop" role="dialog" aria-label="草圖底稿">
       <button class="dlgX" id="sketchPopX" title="關閉" aria-label="關閉"><svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
       <h3>淡淡的線是「草圖底稿」</h3>
@@ -4856,7 +4856,7 @@ function sketchNudge() {
   if (Date.now() - sketchNudgeAt < 4000) return;
   sketchNudgeAt = Date.now();
   const c = $("sketchChip"); c.classList.remove("nudge"); void c.offsetWidth; c.classList.add("nudge");
-  toast("這是草圖底稿（鎖住了）。要修改請點下面的「草圖底稿」");
+  toast("這是草圖底稿（鎖住了）。要修改請點左上角的「草圖底稿」");
 }
 // 點的位置旁邊有沒有草圖的線（精畫模式下草圖點不到，用這個判斷要不要提醒）
 function sketchItemNear(wx, wy) {
@@ -6178,7 +6178,7 @@ const GESTURES_HTML = `
   <div class="gest"><svg viewBox="0 0 64 52" class="pinch"><circle class="f a" cx="24" cy="30" r="8"/><circle class="f b" cx="40" cy="22" r="8"/></svg><b>兩指捏合</b>放大縮小</div>
   <div class="gest"><svg viewBox="0 0 64 52" class="drag"><circle class="f" cx="32" cy="26" r="9"/></svg><b>手指拖曳</b>移動畫面（筆畫圖）</div>`;
 const TIPS = [
-  { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的<b>底稿</b>讓你描（下面的「草圖底稿」可以回去改或藏起來）。", target: "#modeSeg" },
+  { id: "sketch", title: "草圖／精畫", text: "現場用<b>草圖</b>隨手畫、尺寸用筆寫旁邊；回辦公室切<b>精畫</b>，草圖變成淡淡的<b>底稿</b>讓你描（左上角「草圖／精畫」下面的「草圖底稿」可以回去改或藏起來）。", target: "#modeSeg" },
   { id: "straighten", title: "畫直線、矩形", text: "畫完<b>先別放開筆</b>，停 0.5 秒：歪歪的線會變直線，畫一圈會變成方正的矩形。也可以在上面選<b>「直線」「矩形」</b>，直接拉。", target: '[data-tool="pen"]' },
   { id: "room", title: "畫房間和柱子", text: "牆壁筆畫一圈、<b>停住</b>就是房間；沿著牆的內側畫一小段就是<b>柱子</b>。用選取點一下，就能拖到別的位置。", target: '[data-tool="wall"]' },
   { id: "dims", title: "標尺寸＋計算機", text: "點「?」輸入這段的長度。要加加減減就點旁邊的<b>計算機</b>，算好按「帶入」。也可以從一點拉到另一點自由標註，<b>拖兩端的圓點</b>可以拉長縮短。", target: '[data-tool="dim"]' },
@@ -6608,9 +6608,7 @@ const APP_VERSION = "2026.11.12.5";
 const CHANGELOG = [
   ["2026.11.12.5", [
     "圖形選箭頭時，上面不再出現用不到的「填色」",
-  ]],
-  ["2026.11.12.4", [
-    "選取東西時，下面的「草圖底稿」膠囊先讓開，不會再蓋住選取工具列",
+    "「草圖底稿」膠囊搬到左上角「草圖／精畫」下面，不會再擋到下面的選取工具列",
   ]],
   ["2026.11.12.3", [
     "版面改成像 GoodNotes：工具（畫筆、牆壁、尺寸…）和四個顏色都排在最上面一條，左邊是復原／重做",
