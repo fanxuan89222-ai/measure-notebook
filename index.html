@@ -1015,11 +1015,12 @@
       <span class="chipPres" id="shapePres"><button data-v="2">細</button><button data-v="3">中</button><button data-v="5">粗</button></span>
       <input type="range" class="sizeSlider adv" id="shapeWidthSlider" min="0.5" max="50" step="0.5" style="width:100px">
       <input type="number" class="sizeNum adv" id="shapeNum" min="0.5" max="50" step="0.5" inputmode="decimal">
-      <span class="barSep"></span>
-      <span>填色</span>
-      <button class="sf" data-f="none">不填</button>
-      <button class="sf" data-f="tint">淡色</button>
-      <button class="sf" data-f="solid">實心</button>
+      <!-- 填色：只有框框、圓形才有；畫箭頭時整段藏起來 -->
+      <span class="barSep fillPart"></span>
+      <span class="fillPart">填色</span>
+      <button class="sf fillPart" data-f="none">不填</button>
+      <button class="sf fillPart" data-f="tint">淡色</button>
+      <button class="sf fillPart" data-f="solid">實心</button>
       <button type="button" class="advBtn" title="自訂大小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>自訂</button>
     </div>
     <div id="selBar">
@@ -5167,9 +5168,9 @@ function refreshShapeBar() {
   refreshShapePres();
   document.querySelectorAll("#shapeBar .sk").forEach((b) => b.classList.toggle("on", b.dataset.k === ui.shapeKind));
   document.querySelectorAll("#shapeBar .sf").forEach((b) => b.classList.toggle("on", b.dataset.f === ui.shapeFill));
-  // 箭頭沒有填色
+  // 箭頭沒有填色：整段「填色」藏起來，不要擺著讓人以為能用
   const arrow = ui.shapeKind === "arrow" || ui.shapeKind === "elbow";
-  document.querySelectorAll("#shapeBar .sf").forEach((b) => (b.disabled = arrow));
+  document.querySelectorAll("#shapeBar .fillPart").forEach((b) => (b.style.display = arrow ? "none" : ""));
 }
 // 圖形粗細：拉滑桿或輸入數字，改之後畫的圖形；選取中的圖形也一起改（可以復原）
 let shapeWidthUndo = false;
@@ -6603,8 +6604,11 @@ window.addEventListener("resize", () => renderOverlay());
      1. APP_VERSION 改成今天日期（同一天第二次就加 .2，例如 2026.11.07.2）
      2. 在 CHANGELOG 最上面加一筆，寫同事看得懂的話
    同事下次打開 App 就會跳出「更新說明」；第一次用的人不會跳。 */
-const APP_VERSION = "2026.11.12.4";
+const APP_VERSION = "2026.11.12.5";
 const CHANGELOG = [
+  ["2026.11.12.5", [
+    "圖形選箭頭時，上面不再出現用不到的「填色」",
+  ]],
   ["2026.11.12.4", [
     "選取東西時，下面的「草圖底稿」膠囊先讓開，不會再蓋住選取工具列",
   ]],
